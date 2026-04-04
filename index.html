@@ -190,9 +190,25 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',system-ui,-apple-sy
     <div class="script-text" id="script-text"></div>
     <div class="script-actions">
       <button class="regen" onclick="generateScript()">Regenerate</button>
-      <button class="post" onclick="postToYouTube()">Post to YouTube</button>
+      <button class="gen-btn" onclick="renderVideo()" style="flex:2;">Create Video</button>
     </div>
   </div>
+
+  <div class="gen-card" id="video-output" style="display:none;margin-top:20px;">
+    <h3 style="color:#6bcb77;margin-bottom:12px;">Video Preview</h3>
+    <canvas id="video-canvas" width="1080" height="1920" style="width:100%;max-height:500px;border-radius:8px;background:#000;"></canvas>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+      <button class="regen" id="play-btn" onclick="playPreview()">Play Preview</button>
+      <button class="regen" id="stop-btn" onclick="stopPreview()" style="display:none;">Stop</button>
+      <button class="gen-btn" onclick="exportVideo()" style="flex:1;">Export Video</button>
+      <button class="post" onclick="postVideoToYouTube()" style="flex:1;">Post to YouTube</button>
+    </div>
+    <div style="margin-top:8px;">
+      <video id="exported-video" controls style="width:100%;border-radius:8px;display:none;"></video>
+    </div>
+    <div class="status-bar" id="video-status"></div>
+  </div>
+
   <div class="status-bar" id="gen-status"></div>
 </div>
 
@@ -579,16 +595,282 @@ function uploadToYouTube(){
   });
 }
 
+// ========== VIDEO RENDERER ==========
+var videoScenes = [];
+var videoPlaying = false;
+var videoAnimFrame = null;
+var fruitEmojis = {'Strawberry':'🍓','Banana':'🍌','Mango':'🥭','Apple':'🍎','Grape':'🍇','Pineapple':'🍍','Orange':'🍊','Watermelon':'🍉','Peach':'🍑','Cherry':'🍒','Lemon':'🍋','Blueberry':'🫐'};
+var fruitColors = {'Strawberry':'#ff4757','Banana':'#ffd93d','Mango':'#ff9f43','Apple':'#ee5a24','Grape':'#8854d0','Pineapple':'#f9ca24','Orange':'#ff6348','Watermelon':'#2ed573','Peach':'#ffb8b8','Cherry':'#c0392b','Lemon':'#f6e58d','Blueberry':'#3742fa'};
+
+function parseScriptToScenes(){
+  var scriptEl = document.getElementById('script-text');
+  var nodes = scriptEl.childNodes;
+  var scenes = [];
+  for(var i=0;i<nodes.length;i++){
+    var node = nodes[i];
+    if(node.nodeType===1){
+      if(node.classList.contains('direction')){
+        scenes.push({type:'direction',text:node.textContent.replace(/[\[\]]/g,'').trim()});
+      } else if(node.classList.contains('char-name')){
+        var charName = node.textContent.replace(':','').trim();
+        var line = '';
+        var next = nodes[i+1];
+        if(next&&next.nodeType===3)line=next.textContent.replace(/^[:\s"]+|["]+$/g,'').trim();
+        if(charName&&line)scenes.push({type:'dialogue',char:charName,line:line});
+      }
+    } else if(node.nodeType===3){
+      var text = node.textContent.trim();
+      if(text){
+        // Parse "CharName: "line""
+        var match = text.match(/^([^:]+):\s*"(.+)"$/);
+        if(match){
+          scenes.push({type:'dialogue',char:match[1].trim(),line:match[2].trim()});
+        }
+      }
+    }
+  }
+  // Re-parse from innerHTML if needed
+  if(scenes.length<2){
+    scenes=[];
+    var html=scriptEl.innerHTML;
+    var dirMatches=html.match(/<span class="direction">\[([^\]]+)\]<\/span>/g)||[];
+    dirMatches.forEach(function(m){
+      scenes.push({type:'direction',text:m.replace(/<[^>]+>/g,'').replace(/[\[\]]/g,'').trim()});
+    });
+    var lineMatches=html.match(/<span class="char-name">([^<]+)<\/span>\s*"([^"]+)"/g)||[];
+    lineMatches.forEach(function(m){
+      var parts=m.match(/<span class="char-name">([^<]+)<\/span>\s*"([^"]+)"/);
+      if(parts)scenes.push({type:'dialogue',char:parts[1].replace(':','').trim(),line:parts[2].trim()});
+    });
+  }
+  return scenes;
+}
+
+function renderVideo(){
+  videoScenes = parseScriptToScenes();
+  if(videoScenes.length<2){
+    setStatus('gen-status','Generate a script first!','err');
+    return;
+  }
+  document.getElementById('video-output').style.display='block';
+  drawScene(0);
+  setStatus('gen-status','Video created! Click Play Preview to watch, or Export to download.','ok');
+}
+
+function drawScene(idx){
+  var canvas=document.getElementById('video-canvas');
+  var ctx=canvas.getContext('2d');
+  var w=canvas.width,h=canvas.height;
+  var scene=videoScenes[idx]||videoScenes[0];
+
+  // Background gradient
+  var bg=ctx.createLinearGradient(0,0,0,h);
+  bg.addColorStop(0,'#1a0a2e');
+  bg.addColorStop(0.5,'#16213e');
+  bg.addColorStop(1,'#0a0a0f');
+  ctx.fillStyle=bg;
+  ctx.fillRect(0,0,w,h);
+
+  // Dramatic spotlight
+  var glow=ctx.createRadialGradient(w/2,h*0.4,50,w/2,h*0.4,500);
+  glow.addColorStop(0,'rgba(107,203,119,0.08)');
+  glow.addColorStop(1,'transparent');
+  ctx.fillStyle=glow;
+  ctx.fillRect(0,0,w,h);
+
+  if(scene.type==='direction'){
+    // Direction/narration scene
+    ctx.fillStyle='rgba(255,255,255,0.05)';
+    ctx.fillRect(0,h*0.35,w,h*0.3);
+    ctx.textAlign='center';
+    ctx.fillStyle='#888';
+    ctx.font='italic 42px "Segoe UI",sans-serif';
+    wrapText(ctx,scene.text,w/2,h*0.48,w-120,52);
+  } else {
+    // Dialogue scene
+    var charName=scene.char;
+    var emoji=fruitEmojis[charName]||'🍏';
+    var color=fruitColors[charName]||'#fff';
+
+    // Character emoji (large, centered)
+    ctx.textAlign='center';
+    ctx.font='280px serif';
+    ctx.fillText(emoji,w/2,h*0.42);
+
+    // Character name
+    ctx.fillStyle=color;
+    ctx.font='bold 64px "Segoe UI",sans-serif';
+    ctx.fillText(charName,w/2,h*0.56);
+
+    // Speech bubble background
+    ctx.fillStyle='rgba(0,0,0,0.5)';
+    roundRect(ctx,60,h*0.60,w-120,h*0.28,20);
+    ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.1)';
+    ctx.lineWidth=2;
+    roundRect(ctx,60,h*0.60,w-120,h*0.28,20);
+    ctx.stroke();
+
+    // Dialogue text
+    ctx.fillStyle='#fff';
+    ctx.font='52px "Segoe UI",sans-serif';
+    ctx.textAlign='center';
+    wrapText(ctx,'"'+scene.line+'"',w/2,h*0.67,w-180,64);
+  }
+
+  // Top bar - FruitDrama watermark
+  ctx.fillStyle='rgba(255,255,255,0.15)';
+  ctx.font='bold 32px "Segoe UI",sans-serif';
+  ctx.textAlign='left';
+  ctx.fillText('FruitDrama',40,60);
+
+  // Scene counter
+  ctx.textAlign='right';
+  ctx.fillStyle='rgba(255,255,255,0.1)';
+  ctx.font='28px "Segoe UI",sans-serif';
+  ctx.fillText((idx+1)+'/'+videoScenes.length,w-40,60);
+}
+
+function wrapText(ctx,text,x,y,maxWidth,lineHeight){
+  var words=text.split(' ');
+  var line='';
+  for(var n=0;n<words.length;n++){
+    var testLine=line+words[n]+' ';
+    if(ctx.measureText(testLine).width>maxWidth&&n>0){
+      ctx.fillText(line.trim(),x,y);
+      line=words[n]+' ';
+      y+=lineHeight;
+    } else {
+      line=testLine;
+    }
+  }
+  ctx.fillText(line.trim(),x,y);
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+// ========== PLAY PREVIEW WITH TTS ==========
+var currentSceneIdx=0;
+var speechSynth=window.speechSynthesis;
+
+function playPreview(){
+  if(videoPlaying){stopPreview();return;}
+  videoPlaying=true;
+  currentSceneIdx=0;
+  document.getElementById('play-btn').style.display='none';
+  document.getElementById('stop-btn').style.display='block';
+  playNextScene();
+}
+
+function playNextScene(){
+  if(!videoPlaying||currentSceneIdx>=videoScenes.length){
+    stopPreview();
+    return;
+  }
+  var scene=videoScenes[currentSceneIdx];
+  drawScene(currentSceneIdx);
+
+  if(scene.type==='direction'){
+    // Show direction for 2 seconds, then move on
+    setTimeout(function(){currentSceneIdx++;playNextScene();},2500);
+  } else {
+    // Speak the line with TTS
+    var utter=new SpeechSynthesisUtterance(scene.line);
+    utter.rate=1.1;
+    utter.pitch=getPitchForChar(scene.char);
+    utter.onend=function(){
+      setTimeout(function(){currentSceneIdx++;playNextScene();},400);
+    };
+    utter.onerror=function(){
+      setTimeout(function(){currentSceneIdx++;playNextScene();},1500);
+    };
+    speechSynth.speak(utter);
+  }
+}
+
+function getPitchForChar(name){
+  var pitches={'Strawberry':1.3,'Banana':0.8,'Mango':1.0,'Apple':1.1,'Grape':1.4,'Pineapple':0.7,'Orange':0.9,'Watermelon':0.6,'Peach':1.5,'Cherry':1.2,'Lemon':1.1,'Blueberry':1.3};
+  return pitches[name]||1.0;
+}
+
+function stopPreview(){
+  videoPlaying=false;
+  speechSynth.cancel();
+  document.getElementById('play-btn').style.display='block';
+  document.getElementById('stop-btn').style.display='none';
+}
+
+// ========== EXPORT VIDEO ==========
+function exportVideo(){
+  setStatus('video-status','Rendering video... this may take a moment','loading');
+  var canvas=document.getElementById('video-canvas');
+  var stream=canvas.captureStream(30);
+
+  // Add audio from TTS via AudioContext
+  var audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  var dest=audioCtx.createMediaStreamDestination();
+  stream.addTrack(dest.stream.getAudioTracks()[0]);
+
+  var recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9'});
+  var chunks=[];
+  recorder.ondataavailable=function(e){if(e.data.size>0)chunks.push(e.data);};
+  recorder.onstop=function(){
+    var blob=new Blob(chunks,{type:'video/webm'});
+    var url=URL.createObjectURL(blob);
+    var vid=document.getElementById('exported-video');
+    vid.src=url;
+    vid.style.display='block';
+    // Also offer download
+    var a=document.createElement('a');
+    a.href=url;a.download='fruitdrama-short.webm';a.click();
+    setStatus('video-status','Video exported! Watch it above or check your downloads.','ok');
+  };
+
+  recorder.start();
+  videoPlaying=true;
+  currentSceneIdx=0;
+
+  function renderNext(){
+    if(!videoPlaying||currentSceneIdx>=videoScenes.length){
+      recorder.stop();
+      videoPlaying=false;
+      return;
+    }
+    drawScene(currentSceneIdx);
+    var scene=videoScenes[currentSceneIdx];
+    var duration=scene.type==='direction'?2500:3000;
+    currentSceneIdx++;
+    setTimeout(renderNext,duration);
+  }
+  renderNext();
+}
+
+function postVideoToYouTube(){
+  if(!ytAccessToken){
+    setStatus('video-status','Connect your YouTube account first!','err');
+    return;
+  }
+  setStatus('video-status','Export the video first, then use the Upload tab to post it.','loading');
+}
+
 function postToYouTube(){
   if(!ytAccessToken){
     setStatus('gen-status','Connect your YouTube account first!','err');
     return;
   }
-  setStatus('gen-status','AI video generation would go here - script saved as draft','loading');
-  // TODO: Integrate with video generation API
-  setTimeout(function(){
-    setStatus('gen-status','Script saved! Video generation requires additional AI service integration.','ok');
-  },1500);
+  renderVideo();
 }
 
 // ========== HISTORY ==========
