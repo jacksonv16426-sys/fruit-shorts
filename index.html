@@ -139,26 +139,28 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',system-ui,-apple-sy
     <h3>Choose Drama Type</h3>
     <p>Select the kind of fruit drama to generate</p>
     <div class="gen-options">
-      <div class="gen-opt selected" data-type="love-triangle" onclick="selectType(this)">
+      <div class="gen-opt selected" data-type="love-triangle" onclick="toggleType(this)">
         <div class="emoji">💔</div>
         <div class="name">Love Triangle</div>
         <div class="desc">Betrayal, jealousy, heartbreak</div>
       </div>
-      <div class="gen-opt" data-type="love-island" onclick="selectType(this)">
+      <div class="gen-opt" data-type="love-island" onclick="toggleType(this)">
         <div class="emoji">🏝️</div>
         <div class="name">Love Island</div>
         <div class="desc">Coupling up, recoupling, drama</div>
       </div>
-      <div class="gen-opt" data-type="confrontation" onclick="selectType(this)">
+      <div class="gen-opt" data-type="confrontation" onclick="toggleType(this)">
         <div class="emoji">😤</div>
         <div class="name">Confrontation</div>
         <div class="desc">Heated arguments, exposing secrets</div>
       </div>
-      <div class="gen-opt" data-type="betrayal" onclick="selectType(this)">
+      <div class="gen-opt" data-type="betrayal" onclick="toggleType(this)">
         <div class="emoji">🔪</div>
         <div class="name">Betrayal</div>
         <div class="desc">Backstabbing, plot twists, revenge</div>
       </div>
+    </div>
+    <div style="font-size:11px;color:#555;margin-top:-8px;margin-bottom:8px;">Select multiple to mix drama types</div>
     </div>
   </div>
 
@@ -201,6 +203,10 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',system-ui,-apple-sy
     <h3>Drop a video clip here</h3>
     <p>MP4, MOV, or WebM • Max 60 seconds for Shorts</p>
     <input type="file" id="upload-input" accept="video/*">
+  </div>
+
+  <div class="upload-preview" id="upload-preview" style="display:none;margin-bottom:20px;">
+    <video id="preview-video" controls style="width:100%;max-height:500px;border-radius:12px;background:#000;"></video>
   </div>
 
   <div class="upload-form" id="upload-form">
@@ -295,12 +301,18 @@ function onYouTubeConnected(){
   }).catch(function(){});
 }
 
-// ========== DRAMA TYPE SELECTION ==========
-var selectedType = 'love-triangle';
-function selectType(el){
-  document.querySelectorAll('.gen-opt').forEach(function(o){o.classList.remove('selected');});
-  el.classList.add('selected');
-  selectedType = el.getAttribute('data-type');
+// ========== DRAMA TYPE SELECTION (multi-select) ==========
+function toggleType(el){
+  el.classList.toggle('selected');
+  // Must have at least one selected
+  if(!document.querySelector('.gen-opt.selected')){el.classList.add('selected');}
+}
+function getSelectedTypes(){
+  var types=[];
+  document.querySelectorAll('.gen-opt.selected').forEach(function(o){
+    types.push(o.getAttribute('data-type'));
+  });
+  return types;
 }
 
 // ========== CHARACTER SELECTION ==========
@@ -403,45 +415,91 @@ function generateScript(){
     return;
   }
 
-  var templates = dramaTemplates[selectedType];
-  if(!templates||!templates.length){
-    setStatus('gen-status','No templates for this type yet','err');
+  var types = getSelectedTypes();
+  if(!types.length){
+    setStatus('gen-status','Pick at least one drama type','err');
     return;
   }
 
-  var template = templates[Math.floor(Math.random()*templates.length)];
+  // Gather all templates from selected types
+  var allTemplates = [];
+  types.forEach(function(t){
+    if(dramaTemplates[t])allTemplates = allTemplates.concat(dramaTemplates[t]);
+  });
+
+  if(!allTemplates.length){
+    setStatus('gen-status','No templates available','err');
+    return;
+  }
+
   var c = chars.slice(0,4);
   while(c.length<4)c.push(chars[Math.floor(Math.random()*chars.length)]);
+  for(var i=c.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t2=c[i];c[i]=c[j];c[j]=t2;}
 
-  // Shuffle characters for variety
-  for(var i=c.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=c[i];c[i]=c[j];c[j]=t;}
-
-  var setup = template.setup;
-  var output = '';
-
-  // Replace character placeholders
   function rep(s){
     return s.replace(/\{c1\}/g,c[0]).replace(/\{c2\}/g,c[1]).replace(/\{c3\}/g,c[2]).replace(/\{c4\}/g,c[3]);
   }
 
-  output += '<span class="direction">['+rep(setup)+']</span>\n\n';
+  var output = '';
 
-  template.lines.forEach(function(line){
-    var charName = c[line.c]||c[0];
-    var text = rep(line.l);
-    output += '<span class="char-name">'+charName+':</span> "'+text+'"\n\n';
-  });
+  if(types.length > 1){
+    // MIX MODE: pull scenes from multiple types and weave them together
+    var usedTemplates = [];
+    types.forEach(function(t){
+      if(dramaTemplates[t]&&dramaTemplates[t].length){
+        var tmpl = dramaTemplates[t][Math.floor(Math.random()*dramaTemplates[t].length)];
+        usedTemplates.push({type:t,tmpl:tmpl});
+      }
+    });
 
-  output += '<span class="direction">[TO BE CONTINUED... Follow for Part 2!]</span>';
+    // Intro
+    output += '<span class="direction">[Episode: "'+c[0]+' vs '+c[1]+' - The Reckoning"]</span>\n\n';
+
+    // Play first half of first template
+    var first = usedTemplates[0];
+    output += '<span class="direction">['+rep(first.tmpl.setup)+']</span>\n\n';
+    var halfLines = Math.ceil(first.tmpl.lines.length/2);
+    first.tmpl.lines.slice(0,halfLines).forEach(function(line){
+      output += '<span class="char-name">'+c[line.c||0]+':</span> "'+rep(line.l)+'"\n\n';
+    });
+
+    // Transition
+    output += '<span class="direction">[Meanwhile... things are about to get worse]</span>\n\n';
+
+    // Play second template
+    for(var ti=1;ti<usedTemplates.length;ti++){
+      var next = usedTemplates[ti];
+      output += '<span class="direction">['+rep(next.tmpl.setup)+']</span>\n\n';
+      next.tmpl.lines.forEach(function(line){
+        output += '<span class="char-name">'+c[line.c||0]+':</span> "'+rep(line.l)+'"\n\n';
+      });
+    }
+
+    // Finish first template
+    output += '<span class="direction">[Back to the original scene...]</span>\n\n';
+    first.tmpl.lines.slice(halfLines).forEach(function(line){
+      output += '<span class="char-name">'+c[line.c||0]+':</span> "'+rep(line.l)+'"\n\n';
+    });
+
+  } else {
+    // SINGLE TYPE: use one template normally
+    var template = allTemplates[Math.floor(Math.random()*allTemplates.length)];
+    output += '<span class="direction">['+rep(template.setup)+']</span>\n\n';
+    template.lines.forEach(function(line){
+      output += '<span class="char-name">'+c[line.c||0]+':</span> "'+rep(line.l)+'"\n\n';
+    });
+  }
+
+  output += '<span class="direction">[TO BE CONTINUED... Follow for Part 2! 🍓🔥]</span>';
 
   document.getElementById('script-text').innerHTML = output;
   document.getElementById('script-output').style.display = 'block';
-  setStatus('gen-status','Script generated! Edit it or post directly.','ok');
+  setStatus('gen-status','Script generated! '+(types.length>1?'Mixed '+types.length+' drama types!':''),'ok');
 
-  // Save to history
+  var typeLabel = types.map(function(t){return t.replace(/-/g,' ');}).join(' + ');
   saveToHistory({
-    title: c[0]+' vs '+c[1]+' - '+selectedType.replace(/-/g,' '),
-    type: selectedType,
+    title: c[0]+' vs '+c[1]+' - '+typeLabel,
+    type: types[0],
     chars: c.slice(0,3),
     status: 'draft',
     date: new Date().toLocaleDateString()
@@ -462,7 +520,13 @@ uploadInput.addEventListener('change',function(){if(this.files.length)handleFile
 function handleFile(file){
   if(!file.type.startsWith('video/')){setStatus('upload-status','Please select a video file','err');return;}
   uploadFile = file;
-  uploadZone.innerHTML = '<div class="icon">🎬</div><h3>'+file.name+'</h3><p>'+Math.round(file.size/1024/1024*10)/10+' MB</p>';
+  uploadZone.innerHTML = '<div class="icon">🎬</div><h3>'+file.name+'</h3><p>'+Math.round(file.size/1024/1024*10)/10+' MB &middot; Click to change</p>';
+  // Show video preview
+  var preview = document.getElementById('upload-preview');
+  var video = document.getElementById('preview-video');
+  var url = URL.createObjectURL(file);
+  video.src = url;
+  preview.style.display = 'block';
   document.getElementById('upload-form').style.display = 'block';
   document.getElementById('upload-title').value = file.name.replace(/\.[^.]+$/,'');
 }
