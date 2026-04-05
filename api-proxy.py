@@ -43,6 +43,8 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
 
             if path.startswith('/openai/'):
                 target = 'https://api.openai.com/' + path[8:]
+            elif path.startswith('/replicate/'):
+                target = 'https://api.replicate.com/' + path[11:]
             elif path.startswith('/kling/'):
                 target = 'https://api.klingai.com/' + path[7:]
             elif path.startswith('/eleven/'):

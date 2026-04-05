@@ -130,6 +130,7 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',system-ui,-apple-sy
   <div class="modal">
     <h2>API Keys</h2>
     <div class="fld"><label>OpenAI API Key</label><input type="password" id="key-openai" placeholder="sk-..."><div class="hint">For DALL-E 3 image generation — platform.openai.com</div></div>
+    <div class="fld"><label>Replicate API Token</label><input type="password" id="key-replicate" placeholder="r8_..."><div class="hint">For video animation — replicate.com</div></div>
     <div class="fld"><label>ElevenLabs API Key</label><input type="password" id="key-elevenlabs" placeholder="Your ElevenLabs key"><div class="hint">For pro voiceover — elevenlabs.io</div></div>
     <div class="fld"><label>YouTube OAuth Client ID</label><input type="text" id="key-youtube" placeholder="xxxxx.apps.googleusercontent.com"><div class="hint">For auto-posting — Google Cloud Console (optional)</div></div>
     <div class="modal-btns">
@@ -214,6 +215,7 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',system-ui,-apple-sy
 function getKey(name){return localStorage.getItem('fd_'+name)||'';}
 function openSettings(){
   document.getElementById('key-openai').value=getKey('openai');
+  document.getElementById('key-replicate').value=getKey('replicate');
   document.getElementById('key-elevenlabs').value=getKey('elevenlabs');
   document.getElementById('key-youtube').value=getKey('youtube');
   document.getElementById('settings-modal').classList.add('on');
@@ -221,6 +223,7 @@ function openSettings(){
 function closeSettings(){document.getElementById('settings-modal').classList.remove('on');}
 function saveSettings(){
   localStorage.setItem('fd_openai',document.getElementById('key-openai').value.trim());
+  localStorage.setItem('fd_replicate',document.getElementById('key-replicate').value.trim());
   localStorage.setItem('fd_elevenlabs',document.getElementById('key-elevenlabs').value.trim());
   localStorage.setItem('fd_youtube',document.getElementById('key-youtube').value.trim());
   closeSettings();
@@ -398,10 +401,23 @@ async function startPipeline(){
     }
     setPipe('voice','done');
 
-    // STEP 4: Cinematic zoom animation on stills
+    // STEP 4: Animate images into video clips with Replicate
+    var replicateKey=getKey('replicate');
     setPipe('animate','running');
-    document.getElementById('pipe-animate-sub').textContent='Applying cinematic camera movements...';
-    await sleep(500);
+    if(replicateKey){
+      for(var k=0;k<generatedImages.length;k++){
+        document.getElementById('pipe-animate-sub').textContent='Animating scene '+(k+1)+' of '+generatedImages.length+' (~30-60s each)...';
+        try{
+          var videoUrl=await animateWithReplicate(replicateKey,generatedImages[k]);
+          generatedImages[k]=videoUrl; // replace still with video
+        }catch(e){
+          console.log('Animation fallback scene '+(k+1)+': '+e.message);
+        }
+      }
+    } else {
+      document.getElementById('pipe-animate-sub').textContent='No Replicate key - using zoom effects. Add key in settings for real animation.';
+      await sleep(500);
+    }
     setPipe('animate','done');
 
     // STEP 5: Assemble video
@@ -422,6 +438,42 @@ async function startPipeline(){
 // Use local proxy to bypass CORS
 var PROXY='http://localhost:8100';
 function apiUrl(service,path){return PROXY+'/'+service+'/'+path;}
+
+// ========== REPLICATE VIDEO ANIMATION ==========
+async function animateWithReplicate(apiKey,imageUrl){
+  // Use Stable Video Diffusion to animate still image
+  var resp=await fetch(apiUrl('replicate','v1/predictions'),{
+    method:'POST',
+    headers:{'Authorization':'Token '+apiKey,'Content-Type':'application/json'},
+    body:JSON.stringify({
+      version:'3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438',
+      input:{
+        input_image:imageUrl,
+        motion_bucket_id:127,
+        cond_aug:0.02,
+        decoding_t:7,
+        fps:12
+      }
+    })
+  });
+  var data=await resp.json();
+  if(data.error)throw new Error(data.error.detail||data.error);
+  // Poll for result
+  var predId=data.id;
+  for(var i=0;i<120;i++){
+    await sleep(3000);
+    var pollResp=await fetch(apiUrl('replicate','v1/predictions/'+predId),{
+      headers:{'Authorization':'Token '+apiKey}
+    });
+    var pollData=await pollResp.json();
+    if(pollData.status==='succeeded'){
+      return pollData.output;
+    }
+    if(pollData.status==='failed')throw new Error('Animation failed: '+(pollData.error||'unknown'));
+    if(pollData.status==='canceled')throw new Error('Animation canceled');
+  }
+  throw new Error('Animation timed out');
+}
 
 // ========== DALL-E 3 IMAGE GENERATION ==========
 async function generateImage(apiKey,prompt){
