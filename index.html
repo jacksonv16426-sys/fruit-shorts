@@ -7,105 +7,106 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;min-height:100vh;}
-
-/* Nav */
 .nav{background:rgba(10,10,15,.95);border-bottom:1px solid #1a1a2e;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px);}
 .nav .logo{font-size:22px;font-weight:800;background:linear-gradient(135deg,#ff6b6b,#ffd93d,#6bcb77);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .nav .logo span{font-size:12px;font-weight:400;-webkit-text-fill-color:#555;margin-left:6px;}
 .nav-right{display:flex;align-items:center;gap:12px;}
-.yt-btn{display:flex;align-items:center;gap:8px;background:#ff0000;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s;}
+.settings-btn{background:#1a1a2e;border:1px solid #2a2a4e;color:#888;padding:8px 14px;border-radius:6px;font-size:12px;cursor:pointer;}
+.settings-btn:hover{color:#fff;border-color:#444;}
+.yt-btn{display:flex;align-items:center;gap:8px;background:#ff0000;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
 .yt-btn:hover{background:#cc0000;}
 .yt-btn.connected{background:#1a1a2e;border:1px solid #2a2a4e;color:#6bcb77;}
-.yt-btn svg{width:18px;height:18px;}
-.user-info{font-size:12px;color:#888;}
 
-/* Hero */
-.hero{text-align:center;padding:60px 24px 40px;background:radial-gradient(ellipse at top,rgba(107,203,119,.06) 0%,transparent 60%);}
-.hero h1{font-size:42px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#ff6b6b,#ffd93d,#6bcb77);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.hero p{font-size:16px;color:#666;max-width:500px;margin:0 auto;}
+.hero{text-align:center;padding:50px 24px 30px;background:radial-gradient(ellipse at top,rgba(107,203,119,.06) 0%,transparent 60%);}
+.hero h1{font-size:38px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#ff6b6b,#ffd93d,#6bcb77);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero p{font-size:15px;color:#555;max-width:500px;margin:0 auto;}
 
-/* Tabs */
-.tabs{display:flex;justify-content:center;gap:4px;padding:0 24px;margin-bottom:30px;}
-.tab{padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;color:#666;background:transparent;border:1px solid transparent;transition:all .2s;}
-.tab:hover{color:#aaa;}
-.tab.active{background:#1a1a2e;color:#fff;border-color:#2a2a4e;}
+.main{max-width:900px;margin:0 auto;padding:20px 24px 60px;}
 
-/* Panels */
-.panel{display:none;max-width:800px;margin:0 auto;padding:0 24px 60px;}
-.panel.active{display:block;}
+/* Settings modal */
+.modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;}
+.modal-bg.on{display:flex;}
+.modal{background:#111119;border:1px solid #2a2a4e;border-radius:12px;padding:28px;max-width:500px;width:90%;}
+.modal h2{font-size:18px;color:#fff;margin-bottom:16px;}
+.modal .fld{margin-bottom:14px;}
+.modal .fld label{display:block;font-size:11px;color:#888;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.modal .fld input{width:100%;background:#0a0a0f;border:1px solid #2a2a4e;border-radius:6px;padding:10px 12px;color:#e0e0e0;font-size:13px;font-family:monospace;outline:none;}
+.modal .fld input:focus{border-color:#6bcb77;}
+.modal .fld .hint{font-size:10px;color:#444;margin-top:3px;}
+.modal-btns{display:flex;gap:8px;margin-top:18px;}
+.modal-btns button{flex:1;padding:10px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;}
+.modal-btns .save{background:#6bcb77;color:#000;}
+.modal-btns .cancel{background:#1a1a2e;color:#888;border:1px solid #2a2a4e;}
 
-/* Upload panel */
-.upload-zone{border:2px dashed #2a2a4e;border-radius:12px;padding:50px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:20px;}
-.upload-zone:hover,.upload-zone.drag{border-color:#6bcb77;background:rgba(107,203,119,.04);}
-.upload-zone .icon{font-size:48px;margin-bottom:12px;}
-.upload-zone h3{font-size:18px;color:#ccc;margin-bottom:4px;}
-.upload-zone p{font-size:13px;color:#555;}
-.upload-zone input{display:none;}
+/* Steps */
+.step{background:#111119;border:1px solid #1a1a2e;border-radius:12px;padding:24px;margin-bottom:20px;}
+.step h3{font-size:16px;color:#fff;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.step h3 .num{background:#6bcb77;color:#000;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
+.step p{font-size:13px;color:#555;margin-bottom:16px;}
 
-.upload-form{display:none;background:#111119;border:1px solid #1a1a2e;border-radius:12px;padding:24px;margin-bottom:20px;}
-.form-field{margin-bottom:16px;}
-.form-field label{display:block;font-size:12px;color:#888;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
-.form-field input,.form-field textarea,.form-field select{width:100%;background:#0a0a0f;border:1px solid #2a2a4e;border-radius:8px;padding:10px 14px;color:#e0e0e0;font-size:14px;font-family:inherit;outline:none;resize:vertical;}
-.form-field input:focus,.form-field textarea:focus{border-color:#6bcb77;}
-.form-field textarea{min-height:80px;}
-.submit-btn{width:100%;background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff;border:none;padding:12px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s;}
-.submit-btn:hover{opacity:.9;}
-.submit-btn:disabled{opacity:.4;cursor:default;}
-
-/* Generate panel */
-.gen-card{background:#111119;border:1px solid #1a1a2e;border-radius:12px;padding:24px;margin-bottom:20px;}
-.gen-card h3{font-size:16px;color:#fff;margin-bottom:4px;}
-.gen-card p{font-size:13px;color:#555;margin-bottom:16px;}
-.gen-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
-.gen-opt{background:#0a0a0f;border:1px solid #2a2a4e;border-radius:8px;padding:14px;cursor:pointer;transition:border-color .2s;text-align:center;}
+.gen-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.gen-opt{background:#0a0a0f;border:1px solid #2a2a4e;border-radius:8px;padding:12px;cursor:pointer;text-align:center;transition:all .2s;}
 .gen-opt:hover{border-color:#6bcb77;}
 .gen-opt.selected{border-color:#6bcb77;background:rgba(107,203,119,.06);}
-.gen-opt .emoji{font-size:28px;margin-bottom:6px;}
-.gen-opt .name{font-size:13px;font-weight:600;color:#ccc;}
-.gen-opt .desc{font-size:11px;color:#555;margin-top:2px;}
+.gen-opt .emoji{font-size:24px;}
+.gen-opt .name{font-size:12px;font-weight:600;color:#ccc;margin-top:4px;}
 
 .char-select{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
-.char{background:#0a0a0f;border:1px solid #2a2a4e;border-radius:8px;padding:10px 14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;font-size:13px;color:#aaa;}
+.char{background:#0a0a0f;border:1px solid #2a2a4e;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12px;color:#aaa;transition:all .2s;}
 .char:hover{border-color:#ffd93d;}
 .char.selected{border-color:#ffd93d;background:rgba(255,217,61,.06);color:#ffd93d;}
 
-.gen-btn{width:100%;background:linear-gradient(135deg,#6bcb77,#4a9d5b);color:#fff;border:none;padding:14px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s;}
-.gen-btn:hover{opacity:.9;}
+.big-btn{width:100%;padding:14px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;border:none;transition:opacity .2s;}
+.big-btn:hover{opacity:.9;}
+.big-btn:disabled{opacity:.3;cursor:default;}
+.big-btn.green{background:linear-gradient(135deg,#6bcb77,#4a9d5b);color:#fff;}
+.big-btn.red{background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff;}
+.big-btn.outline{background:transparent;border:1px solid #2a2a4e;color:#888;}
+.big-btn.outline:hover{color:#fff;border-color:#555;}
 
-/* Script output */
-.script-output{display:none;background:#111119;border:1px solid #2a2a4e;border-radius:12px;padding:24px;margin-top:20px;}
-.script-output h3{font-size:14px;color:#6bcb77;margin-bottom:12px;}
-.script-text{background:#0a0a0f;border-radius:8px;padding:16px;font-size:13px;line-height:1.8;color:#ccc;white-space:pre-wrap;max-height:400px;overflow-y:auto;}
-.script-text .char-name{color:#ffd93d;font-weight:700;}
-.script-text .direction{color:#555;font-style:italic;}
-.script-actions{display:flex;gap:8px;margin-top:16px;}
-.script-actions button{flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #2a2a4e;transition:all .2s;}
-.script-actions .regen{background:transparent;color:#888;}
-.script-actions .regen:hover{color:#fff;border-color:#555;}
-.script-actions .post{background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff;border:none;}
+/* Pipeline progress */
+.pipeline{display:none;margin-top:20px;}
+.pipeline.on{display:block;}
+.pipe-step{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #1a1a2e;}
+.pipe-step:last-child{border-bottom:none;}
+.pipe-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.pipe-icon.waiting{background:#1a1a2e;color:#444;}
+.pipe-icon.running{background:#ffd93d20;color:#ffd93d;animation:pulse 1s infinite;}
+.pipe-icon.done{background:#6bcb7720;color:#6bcb77;}
+.pipe-icon.err{background:#ff6b6b20;color:#ff6b6b;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+.pipe-info{flex:1;}
+.pipe-info .pipe-title{font-size:13px;color:#ccc;font-weight:600;}
+.pipe-info .pipe-sub{font-size:11px;color:#555;}
 
-/* Status */
-.status-bar{display:none;background:#111119;border:1px solid #2a2a4e;border-radius:8px;padding:12px 16px;margin-top:12px;font-size:13px;}
+/* Scene preview grid */
+.scene-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:16px;}
+.scene-card{background:#0a0a0f;border:1px solid #1a1a2e;border-radius:8px;overflow:hidden;}
+.scene-card img{width:100%;aspect-ratio:9/16;object-fit:cover;display:block;background:#1a1a2e;}
+.scene-card .scene-info{padding:8px;font-size:11px;color:#888;}
+.scene-card .scene-char{color:#ffd93d;font-weight:600;}
+
+/* Video output */
+.video-output{display:none;margin-top:20px;}
+.video-output.on{display:block;}
+.video-output video{width:100%;max-height:500px;border-radius:12px;background:#000;}
+.video-actions{display:flex;gap:8px;margin-top:12px;}
+.video-actions button{flex:1;}
+
+.status-bar{display:none;padding:10px 14px;border-radius:8px;font-size:12px;margin-top:12px;}
 .status-bar.show{display:block;}
-.status-bar.ok{color:#6bcb77;border-color:#2a4e2a;}
-.status-bar.err{color:#ff6b6b;border-color:#4e2a2a;}
-.status-bar.loading{color:#ffd93d;}
+.status-bar.ok{background:#6bcb7715;color:#6bcb77;border:1px solid #6bcb7730;}
+.status-bar.err{background:#ff6b6b15;color:#ff6b6b;border:1px solid #ff6b6b30;}
+.status-bar.loading{background:#ffd93d15;color:#ffd93d;border:1px solid #ffd93d30;}
 
-/* History */
-.history-empty{text-align:center;padding:40px;color:#333;font-size:14px;}
-.history-item{background:#111119;border:1px solid #1a1a2e;border-radius:12px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;}
-.history-item .thumb{width:60px;height:80px;background:#1a1a2e;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
-.history-item .info{flex:1;}
-.history-item .info h4{font-size:14px;color:#ccc;margin-bottom:2px;}
-.history-item .info p{font-size:11px;color:#555;}
-.history-item .badge{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:600;}
-.badge.posted{background:rgba(107,203,119,.1);color:#6bcb77;}
-.badge.draft{background:rgba(255,217,61,.1);color:#ffd93d;}
+.script-box{background:#0a0a0f;border:1px solid #1a1a2e;border-radius:8px;padding:16px;font-size:13px;line-height:1.8;color:#ccc;white-space:pre-wrap;max-height:300px;overflow-y:auto;margin-bottom:12px;}
+.script-box .cn{color:#ffd93d;font-weight:700;}
+.script-box .dir{color:#555;font-style:italic;}
 
 @media(max-width:600px){
-  .hero h1{font-size:28px;}
+  .hero h1{font-size:26px;}
   .gen-options{grid-template-columns:1fr;}
-  .tabs{flex-wrap:wrap;}
+  .scene-grid{grid-template-columns:1fr 1fr;}
 }
 </style>
 </head>
@@ -114,797 +115,511 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',system-ui,-apple-sy
 <nav class="nav">
   <div class="logo">FruitDrama <span>AI Shorts</span></div>
   <div class="nav-right">
-    <span class="user-info" id="user-info"></span>
-    <button class="yt-btn" id="yt-btn" onclick="connectYouTube()">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2c-.3-1-1-1.8-2-2.1C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.5.6c-1 .3-1.8 1.1-2 2.1C0 8.1 0 12 0 12s0 3.9.5 5.8c.3 1 1 1.8 2 2.1 1.9.6 9.5.6 9.5.6s7.6 0 9.5-.6c1-.3 1.8-1.1 2-2.1.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.5 15.5V8.5l6.5 3.5-6.5 3.5z"/></svg>
-      Connect YouTube
-    </button>
+    <button class="settings-btn" onclick="openSettings()">API Keys</button>
+    <button class="yt-btn" id="yt-btn" onclick="connectYouTube()">Connect YouTube</button>
   </div>
 </nav>
 
 <div class="hero">
   <h1>FruitDrama</h1>
-  <p>Generate viral fruit drama shorts with AI and auto-post to your YouTube channel</p>
+  <p>Generate top-tier fruit drama shorts with AI and auto-post to YouTube</p>
 </div>
 
-<div class="tabs">
-  <div class="tab active" onclick="showTab('generate')">Generate</div>
-  <div class="tab" onclick="showTab('upload')">Upload Clip</div>
-  <div class="tab" onclick="showTab('history')">History</div>
+<!-- SETTINGS MODAL -->
+<div class="modal-bg" id="settings-modal">
+  <div class="modal">
+    <h2>API Keys</h2>
+    <div class="fld"><label>OpenAI API Key</label><input type="password" id="key-openai" placeholder="sk-..."><div class="hint">For DALL-E 3 image generation — platform.openai.com</div></div>
+    <div class="fld"><label>ElevenLabs API Key</label><input type="password" id="key-elevenlabs" placeholder="Your ElevenLabs key"><div class="hint">For pro voiceover — elevenlabs.io</div></div>
+    <div class="fld"><label>Kling AI API Key</label><input type="password" id="key-kling" placeholder="Your Kling key"><div class="hint">For video animation — klingai.com (optional)</div></div>
+    <div class="fld"><label>YouTube OAuth Client ID</label><input type="text" id="key-youtube" placeholder="xxxxx.apps.googleusercontent.com"><div class="hint">For auto-posting — Google Cloud Console (optional)</div></div>
+    <div class="modal-btns">
+      <button class="cancel" onclick="closeSettings()">Cancel</button>
+      <button class="save" onclick="saveSettings()">Save Keys</button>
+    </div>
+  </div>
 </div>
 
-<!-- GENERATE TAB -->
-<div class="panel active" id="panel-generate">
-  <div class="gen-card">
-    <h3>Choose Drama Type</h3>
-    <p>Select the kind of fruit drama to generate</p>
+<div class="main">
+
+  <!-- STEP 1: Script -->
+  <div class="step">
+    <h3><span class="num">1</span> Create Drama</h3>
+    <p>Pick drama types (select multiple to mix) and choose your fruit cast</p>
+
     <div class="gen-options">
-      <div class="gen-opt selected" data-type="love-triangle" onclick="toggleType(this)">
-        <div class="emoji">💔</div>
-        <div class="name">Love Triangle</div>
-        <div class="desc">Betrayal, jealousy, heartbreak</div>
+      <div class="gen-opt selected" data-type="love-triangle" onclick="this.classList.toggle('selected')"><div class="emoji">💔</div><div class="name">Love Triangle</div></div>
+      <div class="gen-opt" data-type="love-island" onclick="this.classList.toggle('selected')"><div class="emoji">🏝️</div><div class="name">Love Island</div></div>
+      <div class="gen-opt" data-type="confrontation" onclick="this.classList.toggle('selected')"><div class="emoji">😤</div><div class="name">Confrontation</div></div>
+      <div class="gen-opt" data-type="betrayal" onclick="this.classList.toggle('selected')"><div class="emoji">🔪</div><div class="name">Betrayal</div></div>
+    </div>
+
+    <div class="char-select">
+      <div class="char selected" onclick="this.classList.toggle('selected')" data-c="Strawberry">🍓 Strawberry</div>
+      <div class="char selected" onclick="this.classList.toggle('selected')" data-c="Banana">🍌 Banana</div>
+      <div class="char" onclick="this.classList.toggle('selected')" data-c="Mango">🥭 Mango</div>
+      <div class="char" onclick="this.classList.toggle('selected')" data-c="Apple">🍎 Apple</div>
+      <div class="char" onclick="this.classList.toggle('selected')" data-c="Grape">🍇 Grape</div>
+      <div class="char" onclick="this.classList.toggle('selected')" data-c="Pineapple">🍍 Pineapple</div>
+      <div class="char" onclick="this.classList.toggle('selected')" data-c="Orange">🍊 Orange</div>
+      <div class="char" onclick="this.classList.toggle('selected')" data-c="Watermelon">🍉 Watermelon</div>
+      <div class="char" onclick="this.classList.toggle('selected')" data-c="Peach">🍑 Peach</div>
+      <div class="char" onclick="this.classList.toggle('selected')" data-c="Cherry">🍒 Cherry</div>
+      <div class="char" onclick="this.classList.toggle('selected')" data-c="Blueberry">🫐 Blueberry</div>
+    </div>
+
+    <button class="big-btn green" onclick="generateScript()">Generate Script</button>
+
+    <div id="script-result" style="display:none;margin-top:16px;">
+      <div class="script-box" id="script-box"></div>
+      <button class="big-btn outline" onclick="generateScript()" style="margin-bottom:8px;">Regenerate</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Generate -->
+  <div class="step" id="step-generate" style="display:none;">
+    <h3><span class="num">2</span> Generate Video</h3>
+    <p>AI generates cinematic images, animates them, adds voiceover and subtitles</p>
+
+    <button class="big-btn green" id="gen-video-btn" onclick="startPipeline()">Generate Full Video</button>
+
+    <div class="pipeline" id="pipeline">
+      <div class="pipe-step" id="pipe-script"><div class="pipe-icon done">✓</div><div class="pipe-info"><div class="pipe-title">Script</div><div class="pipe-sub">Drama script generated</div></div></div>
+      <div class="pipe-step" id="pipe-images"><div class="pipe-icon waiting" id="pipe-images-icon">2</div><div class="pipe-info"><div class="pipe-title">Scene Images</div><div class="pipe-sub" id="pipe-images-sub">Generating cinematic frames with DALL-E 3...</div></div></div>
+      <div class="pipe-step" id="pipe-voice"><div class="pipe-icon waiting" id="pipe-voice-icon">3</div><div class="pipe-info"><div class="pipe-title">Voiceover</div><div class="pipe-sub" id="pipe-voice-sub">Generating character voices with ElevenLabs...</div></div></div>
+      <div class="pipe-step" id="pipe-animate"><div class="pipe-icon waiting" id="pipe-animate-icon">4</div><div class="pipe-info"><div class="pipe-title">Animation</div><div class="pipe-sub" id="pipe-animate-sub">Animating scenes with Kling AI...</div></div></div>
+      <div class="pipe-step" id="pipe-assemble"><div class="pipe-icon waiting" id="pipe-assemble-icon">5</div><div class="pipe-info"><div class="pipe-title">Assembly</div><div class="pipe-sub" id="pipe-assemble-sub">Combining into final video...</div></div></div>
+    </div>
+
+    <div class="scene-grid" id="scene-grid"></div>
+  </div>
+
+  <!-- STEP 3: Preview & Post -->
+  <div class="video-output" id="video-output">
+    <div class="step">
+      <h3><span class="num">3</span> Preview & Post</h3>
+      <p>Watch your video and post it to YouTube</p>
+      <video id="final-video" controls></video>
+      <div class="video-actions">
+        <button class="big-btn outline" onclick="downloadVideo()">Download</button>
+        <button class="big-btn red" onclick="postToYouTube()">Post to YouTube</button>
       </div>
-      <div class="gen-opt" data-type="love-island" onclick="toggleType(this)">
-        <div class="emoji">🏝️</div>
-        <div class="name">Love Island</div>
-        <div class="desc">Coupling up, recoupling, drama</div>
-      </div>
-      <div class="gen-opt" data-type="confrontation" onclick="toggleType(this)">
-        <div class="emoji">😤</div>
-        <div class="name">Confrontation</div>
-        <div class="desc">Heated arguments, exposing secrets</div>
-      </div>
-      <div class="gen-opt" data-type="betrayal" onclick="toggleType(this)">
-        <div class="emoji">🔪</div>
-        <div class="name">Betrayal</div>
-        <div class="desc">Backstabbing, plot twists, revenge</div>
-      </div>
-    </div>
-    <div style="font-size:11px;color:#555;margin-top:-8px;margin-bottom:8px;">Select multiple to mix drama types</div>
     </div>
   </div>
 
-  <div class="gen-card">
-    <h3>Pick Your Fruits</h3>
-    <p>Choose 2-4 characters for the drama</p>
-    <div class="char-select" id="char-select">
-      <div class="char selected" data-char="Strawberry" onclick="toggleChar(this)">🍓 Strawberry</div>
-      <div class="char selected" data-char="Banana" onclick="toggleChar(this)">🍌 Banana</div>
-      <div class="char" data-char="Mango" onclick="toggleChar(this)">🥭 Mango</div>
-      <div class="char" data-char="Apple" onclick="toggleChar(this)">🍎 Apple</div>
-      <div class="char" data-char="Grape" onclick="toggleChar(this)">🍇 Grape</div>
-      <div class="char" data-char="Pineapple" onclick="toggleChar(this)">🍍 Pineapple</div>
-      <div class="char" data-char="Orange" onclick="toggleChar(this)">🍊 Orange</div>
-      <div class="char" data-char="Watermelon" onclick="toggleChar(this)">🍉 Watermelon</div>
-      <div class="char" data-char="Peach" onclick="toggleChar(this)">🍑 Peach</div>
-      <div class="char" data-char="Cherry" onclick="toggleChar(this)">🍒 Cherry</div>
-      <div class="char" data-char="Lemon" onclick="toggleChar(this)">🍋 Lemon</div>
-      <div class="char" data-char="Blueberry" onclick="toggleChar(this)">🫐 Blueberry</div>
-    </div>
-
-    <button class="gen-btn" onclick="generateScript()">Generate Drama Script</button>
-  </div>
-
-  <div class="script-output" id="script-output">
-    <h3>Generated Script</h3>
-    <div class="script-text" id="script-text"></div>
-    <div class="script-actions">
-      <button class="regen" onclick="generateScript()">Regenerate</button>
-      <button class="gen-btn" onclick="renderVideo()" style="flex:2;">Create Video</button>
-    </div>
-  </div>
-
-  <div class="gen-card" id="video-output" style="display:none;margin-top:20px;">
-    <h3 style="color:#6bcb77;margin-bottom:12px;">Video Preview</h3>
-    <canvas id="video-canvas" width="1080" height="1920" style="width:100%;max-height:500px;border-radius:8px;background:#000;"></canvas>
-    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
-      <button class="regen" id="play-btn" onclick="playPreview()">Play Preview</button>
-      <button class="regen" id="stop-btn" onclick="stopPreview()" style="display:none;">Stop</button>
-      <button class="gen-btn" onclick="exportVideo()" style="flex:1;">Export Video</button>
-      <button class="post" onclick="postVideoToYouTube()" style="flex:1;">Post to YouTube</button>
-    </div>
-    <div style="margin-top:8px;">
-      <video id="exported-video" controls style="width:100%;border-radius:8px;display:none;"></video>
-    </div>
-    <div class="status-bar" id="video-status"></div>
-  </div>
-
-  <div class="status-bar" id="gen-status"></div>
-</div>
-
-<!-- UPLOAD TAB -->
-<div class="panel" id="panel-upload">
-  <div class="upload-zone" id="upload-zone">
-    <div class="icon">📁</div>
-    <h3>Drop a video clip here</h3>
-    <p>MP4, MOV, or WebM • Max 60 seconds for Shorts</p>
-    <input type="file" id="upload-input" accept="video/*">
-  </div>
-
-  <div class="upload-preview" id="upload-preview" style="display:none;margin-bottom:20px;">
-    <video id="preview-video" controls style="width:100%;max-height:500px;border-radius:12px;background:#000;"></video>
-  </div>
-
-  <div class="upload-form" id="upload-form">
-    <div class="form-field">
-      <label>Title</label>
-      <input type="text" id="upload-title" placeholder="My Fruit Drama Short">
-    </div>
-    <div class="form-field">
-      <label>Description</label>
-      <textarea id="upload-desc" placeholder="Add a description..."></textarea>
-    </div>
-    <div class="form-field">
-      <label>Visibility</label>
-      <select id="upload-vis">
-        <option value="public">Public</option>
-        <option value="unlisted">Unlisted</option>
-        <option value="private">Private</option>
-      </select>
-    </div>
-    <button class="submit-btn" id="upload-btn" onclick="uploadToYouTube()">Upload to YouTube</button>
-    <div class="status-bar" id="upload-status"></div>
-  </div>
-</div>
-
-<!-- HISTORY TAB -->
-<div class="panel" id="panel-history">
-  <div class="history-empty" id="history-empty">No shorts posted yet. Generate or upload your first one!</div>
-  <div id="history-list"></div>
+  <div class="status-bar" id="status"></div>
 </div>
 
 <script>
-// ========== TABS ==========
-function showTab(name){
-  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
-  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
-  event.target.classList.add('active');
-  document.getElementById('panel-'+name).classList.add('active');
+// ========== SETTINGS ==========
+function getKey(name){return localStorage.getItem('fd_'+name)||'';}
+function openSettings(){
+  document.getElementById('key-openai').value=getKey('openai');
+  document.getElementById('key-elevenlabs').value=getKey('elevenlabs');
+  document.getElementById('key-kling').value=getKey('kling');
+  document.getElementById('key-youtube').value=getKey('youtube');
+  document.getElementById('settings-modal').classList.add('on');
 }
+function closeSettings(){document.getElementById('settings-modal').classList.remove('on');}
+function saveSettings(){
+  localStorage.setItem('fd_openai',document.getElementById('key-openai').value.trim());
+  localStorage.setItem('fd_elevenlabs',document.getElementById('key-elevenlabs').value.trim());
+  localStorage.setItem('fd_kling',document.getElementById('key-kling').value.trim());
+  localStorage.setItem('fd_youtube',document.getElementById('key-youtube').value.trim());
+  closeSettings();
+  setStatus('API keys saved!','ok');
+}
+document.getElementById('settings-modal').addEventListener('click',function(e){if(e.target===this)closeSettings();});
 
 // ========== YOUTUBE AUTH ==========
-// YouTube Data API v3 OAuth - needs Google Cloud project client ID
-var YT_CLIENT_ID = ''; // Will be set when we create the Google Cloud project
-var YT_API_KEY = '';
-var ytAccessToken = null;
-var ytChannel = null;
-
+var ytAccessToken=null;
 function connectYouTube(){
-  if(ytAccessToken){
-    // Already connected
-    return;
-  }
-  if(!YT_CLIENT_ID){
-    alert('YouTube API not configured yet. Client ID needed.');
-    return;
-  }
-  var scope = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube';
-  var redirect = window.location.origin + window.location.pathname;
-  var url = 'https://accounts.google.com/o/oauth2/v2/auth?client_id='+YT_CLIENT_ID+
-    '&redirect_uri='+encodeURIComponent(redirect)+
-    '&response_type=token&scope='+encodeURIComponent(scope);
-  window.location.href = url;
+  var clientId=getKey('youtube');
+  if(!clientId){openSettings();return;}
+  var scope='https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube';
+  var redirect=window.location.origin+window.location.pathname;
+  window.location.href='https://accounts.google.com/o/oauth2/v2/auth?client_id='+clientId+'&redirect_uri='+encodeURIComponent(redirect)+'&response_type=token&scope='+encodeURIComponent(scope);
 }
-
-// Check for OAuth token in URL hash on load
 (function(){
-  var hash = window.location.hash;
-  if(hash && hash.indexOf('access_token')!==-1){
-    var params = {};
-    hash.substring(1).split('&').forEach(function(p){
-      var kv=p.split('=');params[kv[0]]=decodeURIComponent(kv[1]);
-    });
-    if(params.access_token){
-      ytAccessToken = params.access_token;
-      window.location.hash = '';
-      onYouTubeConnected();
-    }
+  var hash=window.location.hash;
+  if(hash&&hash.indexOf('access_token')!==-1){
+    var p={};hash.substring(1).split('&').forEach(function(s){var kv=s.split('=');p[kv[0]]=decodeURIComponent(kv[1]);});
+    if(p.access_token){ytAccessToken=p.access_token;window.location.hash='';document.getElementById('yt-btn').classList.add('connected');document.getElementById('yt-btn').textContent='✓ YouTube Connected';}
   }
 })();
 
-function onYouTubeConnected(){
-  var btn = document.getElementById('yt-btn');
-  btn.classList.add('connected');
-  btn.innerHTML = '✓ Connected';
-  // Get channel info
-  fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',{
-    headers:{'Authorization':'Bearer '+ytAccessToken}
-  }).then(function(r){return r.json();}).then(function(data){
-    if(data.items&&data.items.length){
-      ytChannel = data.items[0];
-      document.getElementById('user-info').textContent = ytChannel.snippet.title;
-    }
-  }).catch(function(){});
-}
-
-// ========== DRAMA TYPE SELECTION (multi-select) ==========
-function toggleType(el){
-  el.classList.toggle('selected');
-  // Must have at least one selected
-  if(!document.querySelector('.gen-opt.selected')){el.classList.add('selected');}
-}
-function getSelectedTypes(){
-  var types=[];
-  document.querySelectorAll('.gen-opt.selected').forEach(function(o){
-    types.push(o.getAttribute('data-type'));
-  });
-  return types;
-}
-
-// ========== CHARACTER SELECTION ==========
-function toggleChar(el){
-  el.classList.toggle('selected');
-}
-function getSelectedChars(){
-  var chars=[];
-  document.querySelectorAll('.char.selected').forEach(function(c){
-    chars.push(c.getAttribute('data-char'));
-  });
-  return chars;
-}
-
-// ========== SCRIPT GENERATION ==========
-var dramaTemplates = {
-  'love-triangle': [
-    {setup:'{c1} and {c2} have been together for weeks. But {c1} just found out {c2} has been secretly texting {c3}.',
-     lines:[
-       {c:0,l:"I saw your messages. With {c3}. How could you?"},
-       {c:1,l:"It's not what you think, {c1}! We were just talking!"},
-       {c:0,l:"Just talking?! You said you loved {c3}! I READ IT."},
-       {c:2,l:"*walks in* Oh... hey guys. What's going on?"},
-       {c:0,l:"YOU. You knew {c2} was with me and you still went for it?!"},
-       {c:2,l:"I didn't go for anyone! {c2} came to ME!"},
-       {c:1,l:"STOP! Both of you! I... I need to be honest. I have feelings for both of you."},
-       {c:0,l:"...What did you just say?"},
-       {c:1,l:"I'm sorry {c1}. I never meant to hurt you. But {c3} understands me in ways you don't."},
-       {c:0,l:"We're DONE. *storms off*"},
-     ]},
-    {setup:'{c1} catches {c2} and {c3} on a secret date at the smoothie bar.',
-     lines:[
-       {c:0,l:"So THIS is where you've been every night?! At the smoothie bar with {c3}?!"},
-       {c:1,l:"{c1}?! What are you doing here?!"},
-       {c:0,l:"What am I doing here?! What are YOU doing here with {c3}?!"},
-       {c:2,l:"Look, {c1}, this isn't what it looks like—"},
-       {c:0,l:"Don't even start with me, {c3}. I trusted you. You were my BEST FRIEND."},
-       {c:2,l:"And I still am! We were just—"},
-       {c:0,l:"Save it. I can see the matching smoothies. The shared straw. You make me SICK."},
-       {c:1,l:"{c1}, please, let me explain—"},
-       {c:0,l:"There's nothing to explain. You chose {c3} over me. Live with it."},
-       {c:1,l:"Wait! ...I choose you, {c1}. I always have."},
-       {c:2,l:"Wow. So I meant NOTHING to you, {c2}?"},
-     ]},
-  ],
-  'love-island': [
-    {setup:"It's recoupling night in the fruit bowl. {c1} must choose between {c2} and {c3}.",
-     lines:[
-       {c:0,l:"This is the hardest decision I've ever had to make."},
-       {c:0,l:"The fruit I want to couple up with is..."},
-       {c:0,l:"..."},
-       {c:0,l:"{c3}."},
-       {c:1,l:"*jaw drops* Are you serious right now?!"},
-       {c:2,l:"*smirks* I knew it."},
-       {c:1,l:"After EVERYTHING we've been through?! I peeled myself open for you!"},
-       {c:0,l:"I'm sorry {c2}. My heart wants what it wants."},
-       {c:1,l:"You're gonna regret this. Mark my words."},
-       {c:2,l:"Don't be bitter, {c2}. Maybe you'll find someone in Casa Fruit."},
-       {c:1,l:"Oh I WILL. And they'll be ten times better than either of you."},
-     ]},
-  ],
-  'confrontation': [
-    {setup:"{c1} has been spreading rumors about {c2} behind their back. {c2} just found out.",
-     lines:[
-       {c:1,l:"We need to talk. NOW."},
-       {c:0,l:"About what?"},
-       {c:1,l:"Don't play dumb. I know what you've been saying about me to everyone."},
-       {c:0,l:"I don't know what you're talking about."},
-       {c:1,l:"Really? So you DIDN'T tell {c3} that I was fake? That I was rotten on the inside?"},
-       {c:0,l:"I mean... I might have said something—"},
-       {c:1,l:"MIGHT HAVE?! Everyone in the fruit bowl is looking at me different now because of YOU!"},
-       {c:0,l:"Maybe if you weren't so sus all the time, I wouldn't have to say anything!"},
-       {c:1,l:"SUS?! I've been nothing but real since day one! YOU'RE the fake one!"},
-       {c:0,l:"Whatever. Everyone already knows the truth about you."},
-       {c:1,l:"The truth? The TRUTH is that you're jealous. And everyone's about to find out what YOU'VE been hiding."},
-     ]},
-  ],
-  'betrayal': [
-    {setup:"{c1} discovers that {c2}, their closest ally, has been plotting against them with {c3}.",
-     lines:[
-       {c:0,l:"I heard everything. Every. Single. Word."},
-       {c:1,l:"{c1}... how long have you been standing there?"},
-       {c:0,l:"Long enough to hear you and {c3} planning to get me eliminated from the fruit bowl."},
-       {c:1,l:"It's not like that! I was trying to protect you!"},
-       {c:0,l:"PROTECT ME?! You were literally saying I should be the next one to go!"},
-       {c:2,l:"Look, {c1}, the game is the game. Nothing personal."},
-       {c:0,l:"Nothing PERSONAL?! {c2} was my day one! We made a pact!"},
-       {c:1,l:"Pacts change, {c1}. This is about survival."},
-       {c:0,l:"You know what? Fine. But just remember... I know ALL your secrets, {c2}. ALL of them."},
-       {c:1,l:"...you wouldn't."},
-       {c:0,l:"Watch me. *walks away*"},
-     ]},
-  ],
+// ========== SCRIPT TEMPLATES ==========
+var templates={
+'love-triangle':[
+  {setup:'{c1} and {c2} have been together for weeks. But {c1} just found out {c2} has been secretly meeting {c3}.',
+   scenes:[
+     {char:0,line:"I saw everything. The messages. The late nights. All of it.",mood:"dark bedroom, looking at phone, tears, devastated"},
+     {char:1,line:"It's not what you think! I can explain!",mood:"caught, panicked expression, hands up defensively"},
+     {char:0,line:"Explain what?! You told {c3} you LOVED them!",mood:"angry, confrontational, pointing finger, living room"},
+     {char:2,line:"Don't blame me. {c2} came to ME.",mood:"smirking, arms crossed, confident, doorway"},
+     {char:0,line:"I gave you everything... and this is what I get?",mood:"heartbroken, tears streaming, rain outside window"},
+     {char:1,line:"I'm sorry... I have feelings for both of you.",mood:"guilty, looking down, ashamed"},
+     {char:0,line:"We're done.",mood:"walking away alone, rainy street at night, city lights"},
+   ]},
+],
+'love-island':[
+  {setup:"It's recoupling night in the fruit bowl. {c1} must choose between {c2} and {c3}. Only one stays.",
+   scenes:[
+     {char:0,line:"This is the hardest decision I've ever made.",mood:"standing at ceremony podium, dramatic lighting, nervous"},
+     {char:0,line:"The fruit I want to couple up with is...",mood:"long dramatic pause, close-up face, tension"},
+     {char:0,line:"{c3}.",mood:"revealing choice, spotlight, gasps"},
+     {char:1,line:"After EVERYTHING we've been through?!",mood:"shocked, jaw dropped, devastated, tears forming"},
+     {char:2,line:"I knew you'd pick me.",mood:"smug smile, walking forward confidently"},
+     {char:1,line:"You're gonna regret this. Both of you.",mood:"angry tears, storming off, dramatic exit"},
+     {char:0,line:"...did I make the right choice?",mood:"alone, uncertain, looking at sunset, contemplative"},
+   ]},
+],
+'confrontation':[
+  {setup:"{c1} has been spreading lies about {c2}. Today, {c2} found out the truth.",
+   scenes:[
+     {char:1,line:"We need to talk. NOW.",mood:"intense stare, dark hallway, confrontational stance"},
+     {char:0,line:"I don't know what you're talking about.",mood:"fake innocent, looking away, nervous"},
+     {char:1,line:"You told EVERYONE I was fake. That I was rotten inside.",mood:"furious, getting closer, pointing accusingly"},
+     {char:0,line:"Maybe if you weren't so sus, I wouldn't have to say anything.",mood:"defensive, arms crossed, rolling eyes"},
+     {char:1,line:"I've been nothing but real since day one. YOU'RE the fake one.",mood:"standing ground, powerful, fire in eyes"},
+     {char:0,line:"Whatever. Everyone already knows the truth.",mood:"dismissive, turning away"},
+     {char:1,line:"Yeah. They're about to. I know ALL your secrets.",mood:"dark smile, threatening, walking away with purpose"},
+   ]},
+],
+'betrayal':[
+  {setup:"{c1} discovers that {c2}, their closest friend, has been plotting against them with {c3} all along.",
+   scenes:[
+     {char:0,line:"I heard everything. Every. Single. Word.",mood:"emerged from shadows, dark room, betrayed expression"},
+     {char:1,line:"How long have you been standing there?",mood:"terrified, caught red-handed, wide eyes"},
+     {char:0,line:"Long enough. You and {c3}... planning to destroy me.",mood:"shaking with anger, clenched fists, dim lighting"},
+     {char:2,line:"Nothing personal. It's just the game.",mood:"cold expression, no remorse, leaning against wall"},
+     {char:0,line:"You were my DAY ONE, {c2}! We made a pact!",mood:"emotional, voice breaking, flashback feeling"},
+     {char:1,line:"Pacts change. This is about survival.",mood:"cold, calculated, turned away"},
+     {char:0,line:"I know all your secrets. Every single one. Watch what happens next.",mood:"dark determination, walking into shadows, revenge"},
+   ]},
+],
 };
 
+// ========== SCRIPT GENERATION ==========
+var currentScript=null;
 function generateScript(){
-  var chars = getSelectedChars();
-  if(chars.length<2){
-    setStatus('gen-status','Pick at least 2 fruit characters','err');
-    return;
-  }
+  var types=[];document.querySelectorAll('.gen-opt.selected').forEach(function(o){types.push(o.dataset.type);});
+  var chars=[];document.querySelectorAll('.char.selected').forEach(function(c){chars.push(c.dataset.c);});
+  if(chars.length<2){setStatus('Pick at least 2 fruits','err');return;}
+  if(!types.length){setStatus('Pick at least 1 drama type','err');return;}
 
-  var types = getSelectedTypes();
-  if(!types.length){
-    setStatus('gen-status','Pick at least one drama type','err');
-    return;
-  }
-
-  // Gather all templates from selected types
-  var allTemplates = [];
-  types.forEach(function(t){
-    if(dramaTemplates[t])allTemplates = allTemplates.concat(dramaTemplates[t]);
-  });
-
-  if(!allTemplates.length){
-    setStatus('gen-status','No templates available','err');
-    return;
-  }
-
-  var c = chars.slice(0,4);
+  var c=chars.slice();
   while(c.length<4)c.push(chars[Math.floor(Math.random()*chars.length)]);
-  for(var i=c.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t2=c[i];c[i]=c[j];c[j]=t2;}
+  for(var i=c.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=c[i];c[i]=c[j];c[j]=t;}
 
-  function rep(s){
-    return s.replace(/\{c1\}/g,c[0]).replace(/\{c2\}/g,c[1]).replace(/\{c3\}/g,c[2]).replace(/\{c4\}/g,c[3]);
-  }
+  function rep(s){return s.replace(/\{c1\}/g,c[0]).replace(/\{c2\}/g,c[1]).replace(/\{c3\}/g,c[2]).replace(/\{c4\}/g,c[3]);}
 
-  var output = '';
+  // Collect scenes from all selected types
+  var allScenes=[];
+  var output='';
 
-  if(types.length > 1){
-    // MIX MODE: pull scenes from multiple types and weave them together
-    var usedTemplates = [];
-    types.forEach(function(t){
-      if(dramaTemplates[t]&&dramaTemplates[t].length){
-        var tmpl = dramaTemplates[t][Math.floor(Math.random()*dramaTemplates[t].length)];
-        usedTemplates.push({type:t,tmpl:tmpl});
-      }
+  types.forEach(function(type,ti){
+    var tList=templates[type];
+    if(!tList)return;
+    var tmpl=tList[Math.floor(Math.random()*tList.length)];
+
+    if(ti>0)output+='<span class="dir">[The drama escalates...]</span>\n\n';
+    output+='<span class="dir">['+rep(tmpl.setup)+']</span>\n\n';
+
+    tmpl.scenes.forEach(function(scene){
+      var charName=c[scene.char||0];
+      var line=rep(scene.line);
+      output+='<span class="cn">'+charName+':</span> "'+line+'"\n\n';
+      allScenes.push({char:charName,line:line,mood:rep(scene.mood),emoji:getEmoji(charName)});
     });
-
-    // Intro
-    output += '<span class="direction">[Episode: "'+c[0]+' vs '+c[1]+' - The Reckoning"]</span>\n\n';
-
-    // Play first half of first template
-    var first = usedTemplates[0];
-    output += '<span class="direction">['+rep(first.tmpl.setup)+']</span>\n\n';
-    var halfLines = Math.ceil(first.tmpl.lines.length/2);
-    first.tmpl.lines.slice(0,halfLines).forEach(function(line){
-      output += '<span class="char-name">'+c[line.c||0]+':</span> "'+rep(line.l)+'"\n\n';
-    });
-
-    // Transition
-    output += '<span class="direction">[Meanwhile... things are about to get worse]</span>\n\n';
-
-    // Play second template
-    for(var ti=1;ti<usedTemplates.length;ti++){
-      var next = usedTemplates[ti];
-      output += '<span class="direction">['+rep(next.tmpl.setup)+']</span>\n\n';
-      next.tmpl.lines.forEach(function(line){
-        output += '<span class="char-name">'+c[line.c||0]+':</span> "'+rep(line.l)+'"\n\n';
-      });
-    }
-
-    // Finish first template
-    output += '<span class="direction">[Back to the original scene...]</span>\n\n';
-    first.tmpl.lines.slice(halfLines).forEach(function(line){
-      output += '<span class="char-name">'+c[line.c||0]+':</span> "'+rep(line.l)+'"\n\n';
-    });
-
-  } else {
-    // SINGLE TYPE: use one template normally
-    var template = allTemplates[Math.floor(Math.random()*allTemplates.length)];
-    output += '<span class="direction">['+rep(template.setup)+']</span>\n\n';
-    template.lines.forEach(function(line){
-      output += '<span class="char-name">'+c[line.c||0]+':</span> "'+rep(line.l)+'"\n\n';
-    });
-  }
-
-  output += '<span class="direction">[TO BE CONTINUED... Follow for Part 2! 🍓🔥]</span>';
-
-  document.getElementById('script-text').innerHTML = output;
-  document.getElementById('script-output').style.display = 'block';
-  setStatus('gen-status','Script generated! '+(types.length>1?'Mixed '+types.length+' drama types!':''),'ok');
-
-  var typeLabel = types.map(function(t){return t.replace(/-/g,' ');}).join(' + ');
-  saveToHistory({
-    title: c[0]+' vs '+c[1]+' - '+typeLabel,
-    type: types[0],
-    chars: c.slice(0,3),
-    status: 'draft',
-    date: new Date().toLocaleDateString()
   });
+
+  output+='<span class="dir">[TO BE CONTINUED... 🍓🔥]</span>';
+
+  currentScript={chars:c,scenes:allScenes,types:types,html:output};
+  document.getElementById('script-box').innerHTML=output;
+  document.getElementById('script-result').style.display='block';
+  document.getElementById('step-generate').style.display='block';
 }
 
-// ========== UPLOAD ==========
-var uploadFile = null;
-var uploadZone = document.getElementById('upload-zone');
-var uploadInput = document.getElementById('upload-input');
-
-uploadZone.addEventListener('click',function(){uploadInput.click();});
-uploadZone.addEventListener('dragover',function(e){e.preventDefault();uploadZone.classList.add('drag');});
-uploadZone.addEventListener('dragleave',function(){uploadZone.classList.remove('drag');});
-uploadZone.addEventListener('drop',function(e){e.preventDefault();uploadZone.classList.remove('drag');if(e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0]);});
-uploadInput.addEventListener('change',function(){if(this.files.length)handleFile(this.files[0]);});
-
-function handleFile(file){
-  if(!file.type.startsWith('video/')){setStatus('upload-status','Please select a video file','err');return;}
-  uploadFile = file;
-  uploadZone.innerHTML = '<div class="icon">🎬</div><h3>'+file.name+'</h3><p>'+Math.round(file.size/1024/1024*10)/10+' MB &middot; Click to change</p>';
-  // Show video preview
-  var preview = document.getElementById('upload-preview');
-  var video = document.getElementById('preview-video');
-  var url = URL.createObjectURL(file);
-  video.src = url;
-  preview.style.display = 'block';
-  document.getElementById('upload-form').style.display = 'block';
-  document.getElementById('upload-title').value = file.name.replace(/\.[^.]+$/,'');
+function getEmoji(name){
+  var e={'Strawberry':'🍓','Banana':'🍌','Mango':'🥭','Apple':'🍎','Grape':'🍇','Pineapple':'🍍','Orange':'🍊','Watermelon':'🍉','Peach':'🍑','Cherry':'🍒','Blueberry':'🫐'};
+  return e[name]||'🍏';
 }
 
-function uploadToYouTube(){
-  if(!ytAccessToken){setStatus('upload-status','Connect your YouTube account first!','err');return;}
-  if(!uploadFile){setStatus('upload-status','No video selected','err');return;}
+// ========== FULL PIPELINE ==========
+var generatedImages=[];
+var generatedAudio=[];
+var finalVideoBlob=null;
 
-  var title = document.getElementById('upload-title').value.trim()||'Untitled Short';
-  var desc = document.getElementById('upload-desc').value.trim();
-  var vis = document.getElementById('upload-vis').value;
+async function startPipeline(){
+  if(!currentScript){setStatus('Generate a script first','err');return;}
+  var openaiKey=getKey('openai');
+  var elevenKey=getKey('elevenlabs');
+  if(!openaiKey){setStatus('Add your OpenAI API key in settings first','err');openSettings();return;}
+  if(!elevenKey){setStatus('Add your ElevenLabs API key in settings first','err');openSettings();return;}
 
-  setStatus('upload-status','Uploading to YouTube...','loading');
-  document.getElementById('upload-btn').disabled = true;
+  document.getElementById('gen-video-btn').disabled=true;
+  document.getElementById('pipeline').classList.add('on');
+  document.getElementById('scene-grid').innerHTML='';
+  generatedImages=[];
+  generatedAudio=[];
 
-  var metadata = {
-    snippet:{title:title,description:desc+'\\n\\n#Shorts #FruitDrama',categoryId:'22'},
-    status:{privacyStatus:vis,selfDeclaredMadeForKids:false}
-  };
+  try{
+    // STEP 2: Generate images
+    setPipe('images','running');
+    for(var i=0;i<currentScript.scenes.length;i++){
+      var scene=currentScript.scenes[i];
+      document.getElementById('pipe-images-sub').textContent='Generating scene '+(i+1)+' of '+currentScript.scenes.length+'...';
 
-  // Resumable upload
-  fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',{
-    method:'POST',
-    headers:{
-      'Authorization':'Bearer '+ytAccessToken,
-      'Content-Type':'application/json',
-      'X-Upload-Content-Length':uploadFile.size,
-      'X-Upload-Content-Type':uploadFile.type
-    },
-    body:JSON.stringify(metadata)
-  }).then(function(r){
-    if(!r.ok)throw new Error('Upload init failed: '+r.status);
-    return r.headers.get('Location');
-  }).then(function(uploadUrl){
-    return fetch(uploadUrl,{
-      method:'PUT',
-      headers:{'Content-Type':uploadFile.type},
-      body:uploadFile
-    });
-  }).then(function(r){return r.json();}).then(function(data){
-    setStatus('upload-status','Uploaded! Video ID: '+data.id,'ok');
-    document.getElementById('upload-btn').disabled = false;
-    saveToHistory({
-      title:title,type:'upload',chars:[],status:'posted',
-      date:new Date().toLocaleDateString(),videoId:data.id
-    });
-  }).catch(function(err){
-    setStatus('upload-status','Upload failed: '+err.message,'err');
-    document.getElementById('upload-btn').disabled = false;
-  });
-}
+      var prompt='Hyper-detailed cinematic 3D render in Pixar/Disney style. A '+scene.char.toLowerCase()+' fruit character with a human body wearing casual streetwear clothing. The '+scene.char.toLowerCase()+' is the head, with realistic human eyes, eyebrows, nose and mouth embedded in the fruit surface. Expression: '+scene.mood+'. Cinematic lighting, shallow depth of field, film grain, dramatic atmosphere. Vertical 9:16 aspect ratio. Ultra realistic subsurface scattering on fruit skin.';
 
-// ========== VIDEO RENDERER ==========
-var videoScenes = [];
-var videoPlaying = false;
-var videoAnimFrame = null;
-var fruitEmojis = {'Strawberry':'🍓','Banana':'🍌','Mango':'🥭','Apple':'🍎','Grape':'🍇','Pineapple':'🍍','Orange':'🍊','Watermelon':'🍉','Peach':'🍑','Cherry':'🍒','Lemon':'🍋','Blueberry':'🫐'};
-var fruitColors = {'Strawberry':'#ff4757','Banana':'#ffd93d','Mango':'#ff9f43','Apple':'#ee5a24','Grape':'#8854d0','Pineapple':'#f9ca24','Orange':'#ff6348','Watermelon':'#2ed573','Peach':'#ffb8b8','Cherry':'#c0392b','Lemon':'#f6e58d','Blueberry':'#3742fa'};
+      var imgUrl=await generateImage(openaiKey,prompt);
+      generatedImages.push(imgUrl);
 
-function parseScriptToScenes(){
-  var scriptEl = document.getElementById('script-text');
-  var nodes = scriptEl.childNodes;
-  var scenes = [];
-  for(var i=0;i<nodes.length;i++){
-    var node = nodes[i];
-    if(node.nodeType===1){
-      if(node.classList.contains('direction')){
-        scenes.push({type:'direction',text:node.textContent.replace(/[\[\]]/g,'').trim()});
-      } else if(node.classList.contains('char-name')){
-        var charName = node.textContent.replace(':','').trim();
-        var line = '';
-        var next = nodes[i+1];
-        if(next&&next.nodeType===3)line=next.textContent.replace(/^[:\s"]+|["]+$/g,'').trim();
-        if(charName&&line)scenes.push({type:'dialogue',char:charName,line:line});
-      }
-    } else if(node.nodeType===3){
-      var text = node.textContent.trim();
-      if(text){
-        // Parse "CharName: "line""
-        var match = text.match(/^([^:]+):\s*"(.+)"$/);
-        if(match){
-          scenes.push({type:'dialogue',char:match[1].trim(),line:match[2].trim()});
-        }
-      }
+      // Show in grid
+      var card=document.createElement('div');card.className='scene-card';
+      card.innerHTML='<img src="'+imgUrl+'" alt="Scene '+(i+1)+'"><div class="scene-info"><span class="scene-char">'+scene.emoji+' '+scene.char+'</span><br>"'+scene.line.substring(0,50)+'..."</div>';
+      document.getElementById('scene-grid').appendChild(card);
     }
-  }
-  // Re-parse from innerHTML if needed
-  if(scenes.length<2){
-    scenes=[];
-    var html=scriptEl.innerHTML;
-    var dirMatches=html.match(/<span class="direction">\[([^\]]+)\]<\/span>/g)||[];
-    dirMatches.forEach(function(m){
-      scenes.push({type:'direction',text:m.replace(/<[^>]+>/g,'').replace(/[\[\]]/g,'').trim()});
-    });
-    var lineMatches=html.match(/<span class="char-name">([^<]+)<\/span>\s*"([^"]+)"/g)||[];
-    lineMatches.forEach(function(m){
-      var parts=m.match(/<span class="char-name">([^<]+)<\/span>\s*"([^"]+)"/);
-      if(parts)scenes.push({type:'dialogue',char:parts[1].replace(':','').trim(),line:parts[2].trim()});
-    });
-  }
-  return scenes;
-}
+    setPipe('images','done');
 
-function renderVideo(){
-  videoScenes = parseScriptToScenes();
-  if(videoScenes.length<2){
-    setStatus('gen-status','Generate a script first!','err');
-    return;
-  }
-  document.getElementById('video-output').style.display='block';
-  drawScene(0);
-  setStatus('gen-status','Video created! Click Play Preview to watch, or Export to download.','ok');
-}
+    // STEP 3: Generate voiceover
+    setPipe('voice','running');
+    for(var j=0;j<currentScript.scenes.length;j++){
+      var sc=currentScript.scenes[j];
+      document.getElementById('pipe-voice-sub').textContent='Recording voice '+(j+1)+' of '+currentScript.scenes.length+'...';
+      var voiceId=getVoiceForChar(sc.char);
+      var audioUrl=await generateVoice(elevenKey,sc.line,voiceId);
+      generatedAudio.push(audioUrl);
+    }
+    setPipe('voice','done');
 
-function drawScene(idx){
-  var canvas=document.getElementById('video-canvas');
-  var ctx=canvas.getContext('2d');
-  var w=canvas.width,h=canvas.height;
-  var scene=videoScenes[idx]||videoScenes[0];
-
-  // Background gradient
-  var bg=ctx.createLinearGradient(0,0,0,h);
-  bg.addColorStop(0,'#1a0a2e');
-  bg.addColorStop(0.5,'#16213e');
-  bg.addColorStop(1,'#0a0a0f');
-  ctx.fillStyle=bg;
-  ctx.fillRect(0,0,w,h);
-
-  // Dramatic spotlight
-  var glow=ctx.createRadialGradient(w/2,h*0.4,50,w/2,h*0.4,500);
-  glow.addColorStop(0,'rgba(107,203,119,0.08)');
-  glow.addColorStop(1,'transparent');
-  ctx.fillStyle=glow;
-  ctx.fillRect(0,0,w,h);
-
-  if(scene.type==='direction'){
-    // Direction/narration scene
-    ctx.fillStyle='rgba(255,255,255,0.05)';
-    ctx.fillRect(0,h*0.35,w,h*0.3);
-    ctx.textAlign='center';
-    ctx.fillStyle='#888';
-    ctx.font='italic 42px "Segoe UI",sans-serif';
-    wrapText(ctx,scene.text,w/2,h*0.48,w-120,52);
-  } else {
-    // Dialogue scene
-    var charName=scene.char;
-    var emoji=fruitEmojis[charName]||'🍏';
-    var color=fruitColors[charName]||'#fff';
-
-    // Character emoji (large, centered)
-    ctx.textAlign='center';
-    ctx.font='280px serif';
-    ctx.fillText(emoji,w/2,h*0.42);
-
-    // Character name
-    ctx.fillStyle=color;
-    ctx.font='bold 64px "Segoe UI",sans-serif';
-    ctx.fillText(charName,w/2,h*0.56);
-
-    // Speech bubble background
-    ctx.fillStyle='rgba(0,0,0,0.5)';
-    roundRect(ctx,60,h*0.60,w-120,h*0.28,20);
-    ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,0.1)';
-    ctx.lineWidth=2;
-    roundRect(ctx,60,h*0.60,w-120,h*0.28,20);
-    ctx.stroke();
-
-    // Dialogue text
-    ctx.fillStyle='#fff';
-    ctx.font='52px "Segoe UI",sans-serif';
-    ctx.textAlign='center';
-    wrapText(ctx,'"'+scene.line+'"',w/2,h*0.67,w-180,64);
-  }
-
-  // Top bar - FruitDrama watermark
-  ctx.fillStyle='rgba(255,255,255,0.15)';
-  ctx.font='bold 32px "Segoe UI",sans-serif';
-  ctx.textAlign='left';
-  ctx.fillText('FruitDrama',40,60);
-
-  // Scene counter
-  ctx.textAlign='right';
-  ctx.fillStyle='rgba(255,255,255,0.1)';
-  ctx.font='28px "Segoe UI",sans-serif';
-  ctx.fillText((idx+1)+'/'+videoScenes.length,w-40,60);
-}
-
-function wrapText(ctx,text,x,y,maxWidth,lineHeight){
-  var words=text.split(' ');
-  var line='';
-  for(var n=0;n<words.length;n++){
-    var testLine=line+words[n]+' ';
-    if(ctx.measureText(testLine).width>maxWidth&&n>0){
-      ctx.fillText(line.trim(),x,y);
-      line=words[n]+' ';
-      y+=lineHeight;
+    // STEP 4: Animation (Kling - optional)
+    var klingKey=getKey('kling');
+    if(klingKey){
+      setPipe('animate','running');
+      document.getElementById('pipe-animate-sub').textContent='Animating scenes with Kling AI...';
+      // TODO: Kling API integration when available
+      await sleep(1000);
+      document.getElementById('pipe-animate-sub').textContent='Using cinematic zoom effects (Kling integration coming soon)';
     } else {
-      line=testLine;
+      document.getElementById('pipe-animate-sub').textContent='Skipped — using cinematic zoom effects instead';
     }
+    setPipe('animate','done');
+
+    // STEP 5: Assemble video
+    setPipe('assemble','running');
+    document.getElementById('pipe-assemble-sub').textContent='Rendering final video...';
+    await assembleVideo();
+    setPipe('assemble','done');
+
+    document.getElementById('video-output').classList.add('on');
+    setStatus('Video generated! Watch the preview below.','ok');
+
+  }catch(err){
+    setStatus('Error: '+err.message,'err');
+  }
+  document.getElementById('gen-video-btn').disabled=false;
+}
+
+async function generateImage(apiKey,prompt){
+  var resp=await fetch('https://api.openai.com/v1/images/generations',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'},
+    body:JSON.stringify({model:'dall-e-3',prompt:prompt,n:1,size:'1024x1792',quality:'hd',style:'vivid'})
+  });
+  var data=await resp.json();
+  if(data.error)throw new Error(data.error.message);
+  return data.data[0].url;
+}
+
+function getVoiceForChar(name){
+  // ElevenLabs preset voice IDs - using different voices for different characters
+  var voices={
+    'Strawberry':'EXAVITQu4vr4xnSDxMaL', // Bella (female)
+    'Banana':'ErXwobaYiN019PkySvjV',      // Antoni (male)
+    'Mango':'VR6AewLTigWG4xSOukaG',       // Arnold (male deep)
+    'Apple':'pNInz6obpgDQGcFmaJgB',       // Adam (male)
+    'Grape':'21m00Tcm4TlvDq8ikWAM',       // Rachel (female)
+    'Pineapple':'yoZ06aMxZJJ28mfd3POQ',   // Sam (male)
+    'Orange':'ErXwobaYiN019PkySvjV',
+    'Watermelon':'VR6AewLTigWG4xSOukaG',
+    'Peach':'EXAVITQu4vr4xnSDxMaL',
+    'Cherry':'21m00Tcm4TlvDq8ikWAM',
+    'Lemon':'pNInz6obpgDQGcFmaJgB',
+    'Blueberry':'yoZ06aMxZJJ28mfd3POQ',
+  };
+  return voices[name]||'ErXwobaYiN019PkySvjV';
+}
+
+async function generateVoice(apiKey,text,voiceId){
+  var resp=await fetch('https://api.elevenlabs.io/v1/text-to-speech/'+voiceId,{
+    method:'POST',
+    headers:{'xi-api-key':apiKey,'Content-Type':'application/json'},
+    body:JSON.stringify({text:text,model_id:'eleven_monolingual_v1',voice_settings:{stability:0.5,similarity_boost:0.75}})
+  });
+  if(!resp.ok){var err=await resp.json().catch(function(){return{};});throw new Error(err.detail||'Voice generation failed');}
+  var blob=await resp.blob();
+  return URL.createObjectURL(blob);
+}
+
+// ========== VIDEO ASSEMBLY ==========
+async function assembleVideo(){
+  var canvas=document.createElement('canvas');
+  canvas.width=1080;canvas.height=1920;
+  var ctx=canvas.getContext('2d');
+  var stream=canvas.captureStream(30);
+
+  // Create audio context for mixing
+  var audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  var dest=audioCtx.createMediaStreamDestination();
+  stream.addTrack(dest.stream.getAudioTracks()[0]);
+
+  var recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:5000000});
+  var chunks=[];
+  recorder.ondataavailable=function(e){if(e.data.size>0)chunks.push(e.data);};
+
+  return new Promise(function(resolve){
+    recorder.onstop=function(){
+      finalVideoBlob=new Blob(chunks,{type:'video/webm'});
+      var url=URL.createObjectURL(finalVideoBlob);
+      document.getElementById('final-video').src=url;
+      resolve();
+    };
+
+    recorder.start();
+    var sceneIdx=0;
+
+    async function renderScene(){
+      if(sceneIdx>=currentScript.scenes.length){
+        setTimeout(function(){recorder.stop();},500);
+        return;
+      }
+
+      var scene=currentScript.scenes[sceneIdx];
+      var imgUrl=generatedImages[sceneIdx];
+      var audioUrl=generatedAudio[sceneIdx];
+
+      // Load image
+      var img=new Image();
+      img.crossOrigin='anonymous';
+      img.onload=async function(){
+        // Play audio
+        var audioDuration=3000;
+        if(audioUrl){
+          try{
+            var audioResp=await fetch(audioUrl);
+            var arrayBuf=await audioResp.arrayBuffer();
+            var audioBuf=await audioCtx.decodeAudioData(arrayBuf);
+            var source=audioCtx.createBufferSource();
+            source.buffer=audioBuf;
+            source.connect(dest);
+            source.start();
+            audioDuration=Math.max(audioBuf.duration*1000+500,2500);
+          }catch(e){audioDuration=3000;}
+        }
+
+        // Animate with Ken Burns zoom over the audio duration
+        var startTime=Date.now();
+        var zoomStart=1.0;
+        var zoomEnd=1.15;
+
+        function drawFrame(){
+          var elapsed=Date.now()-startTime;
+          var progress=Math.min(elapsed/audioDuration,1);
+          var zoom=zoomStart+(zoomEnd-zoomStart)*progress;
+
+          // Clear
+          ctx.fillStyle='#000';
+          ctx.fillRect(0,0,1080,1920);
+
+          // Draw zoomed image
+          var sw=1080/zoom;
+          var sh=1920/zoom;
+          var sx=(1080-sw)/2;
+          var sy=(1920-sh)/2;
+          ctx.drawImage(img,sx,sy,sw,sh,0,0,1080,1920);
+
+          // Subtitle background
+          var subY=1920*0.78;
+          ctx.fillStyle='rgba(0,0,0,0.7)';
+          ctx.fillRect(0,subY-10,1080,200);
+
+          // Subtitle text
+          ctx.textAlign='center';
+          ctx.fillStyle='#fff';
+          ctx.font='bold 48px "Segoe UI",sans-serif';
+          wrapText(ctx,'"'+scene.line+'"',540,subY+40,980,56);
+
+          // Character name
+          ctx.fillStyle='#ffd93d';
+          ctx.font='bold 36px "Segoe UI",sans-serif';
+          ctx.fillText(scene.emoji+' '+scene.char,540,subY-20);
+
+          if(progress<1){
+            requestAnimationFrame(drawFrame);
+          } else {
+            sceneIdx++;
+            setTimeout(renderScene,300);
+          }
+        }
+        drawFrame();
+      };
+      img.onerror=function(){sceneIdx++;renderScene();};
+      img.src=imgUrl;
+    }
+
+    renderScene();
+  });
+}
+
+function wrapText(ctx,text,x,y,maxW,lh){
+  var words=text.split(' '),line='';
+  for(var n=0;n<words.length;n++){
+    var test=line+words[n]+' ';
+    if(ctx.measureText(test).width>maxW&&n>0){ctx.fillText(line.trim(),x,y);line=words[n]+' ';y+=lh;}
+    else line=test;
   }
   ctx.fillText(line.trim(),x,y);
 }
 
-function roundRect(ctx,x,y,w,h,r){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.lineTo(x+w-r,y);
-  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-  ctx.lineTo(x+w,y+h-r);
-  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  ctx.lineTo(x+r,y+h);
-  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-  ctx.lineTo(x,y+r);
-  ctx.quadraticCurveTo(x,y,x+r,y);
-  ctx.closePath();
+function downloadVideo(){
+  if(!finalVideoBlob){setStatus('Generate a video first','err');return;}
+  var a=document.createElement('a');a.href=URL.createObjectURL(finalVideoBlob);
+  a.download='fruitdrama-short.webm';a.click();
 }
 
-// ========== PLAY PREVIEW WITH TTS ==========
-var currentSceneIdx=0;
-var speechSynth=window.speechSynthesis;
-
-function playPreview(){
-  if(videoPlaying){stopPreview();return;}
-  videoPlaying=true;
-  currentSceneIdx=0;
-  document.getElementById('play-btn').style.display='none';
-  document.getElementById('stop-btn').style.display='block';
-  playNextScene();
+async function postToYouTube(){
+  if(!ytAccessToken){setStatus('Connect YouTube first','err');return;}
+  if(!finalVideoBlob){setStatus('Generate a video first','err');return;}
+  setStatus('Uploading to YouTube...','loading');
+  try{
+    var metadata={snippet:{title:currentScript.chars[0]+' vs '+currentScript.chars[1]+' - Fruit Drama',description:'AI generated fruit drama #Shorts #FruitDrama #AI',categoryId:'22'},status:{privacyStatus:'public',selfDeclaredMadeForKids:false}};
+    var initResp=await fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',{
+      method:'POST',headers:{'Authorization':'Bearer '+ytAccessToken,'Content-Type':'application/json','X-Upload-Content-Length':finalVideoBlob.size,'X-Upload-Content-Type':'video/webm'},
+      body:JSON.stringify(metadata)
+    });
+    var uploadUrl=initResp.headers.get('Location');
+    var upResp=await fetch(uploadUrl,{method:'PUT',headers:{'Content-Type':'video/webm'},body:finalVideoBlob});
+    var result=await upResp.json();
+    setStatus('Posted to YouTube! Video ID: '+result.id,'ok');
+  }catch(err){setStatus('Upload failed: '+err.message,'err');}
 }
-
-function playNextScene(){
-  if(!videoPlaying||currentSceneIdx>=videoScenes.length){
-    stopPreview();
-    return;
-  }
-  var scene=videoScenes[currentSceneIdx];
-  drawScene(currentSceneIdx);
-
-  if(scene.type==='direction'){
-    // Show direction for 2 seconds, then move on
-    setTimeout(function(){currentSceneIdx++;playNextScene();},2500);
-  } else {
-    // Speak the line with TTS
-    var utter=new SpeechSynthesisUtterance(scene.line);
-    utter.rate=1.1;
-    utter.pitch=getPitchForChar(scene.char);
-    utter.onend=function(){
-      setTimeout(function(){currentSceneIdx++;playNextScene();},400);
-    };
-    utter.onerror=function(){
-      setTimeout(function(){currentSceneIdx++;playNextScene();},1500);
-    };
-    speechSynth.speak(utter);
-  }
-}
-
-function getPitchForChar(name){
-  var pitches={'Strawberry':1.3,'Banana':0.8,'Mango':1.0,'Apple':1.1,'Grape':1.4,'Pineapple':0.7,'Orange':0.9,'Watermelon':0.6,'Peach':1.5,'Cherry':1.2,'Lemon':1.1,'Blueberry':1.3};
-  return pitches[name]||1.0;
-}
-
-function stopPreview(){
-  videoPlaying=false;
-  speechSynth.cancel();
-  document.getElementById('play-btn').style.display='block';
-  document.getElementById('stop-btn').style.display='none';
-}
-
-// ========== EXPORT VIDEO ==========
-function exportVideo(){
-  setStatus('video-status','Rendering video... this may take a moment','loading');
-  var canvas=document.getElementById('video-canvas');
-  var stream=canvas.captureStream(30);
-
-  // Add audio from TTS via AudioContext
-  var audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  var dest=audioCtx.createMediaStreamDestination();
-  stream.addTrack(dest.stream.getAudioTracks()[0]);
-
-  var recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9'});
-  var chunks=[];
-  recorder.ondataavailable=function(e){if(e.data.size>0)chunks.push(e.data);};
-  recorder.onstop=function(){
-    var blob=new Blob(chunks,{type:'video/webm'});
-    var url=URL.createObjectURL(blob);
-    var vid=document.getElementById('exported-video');
-    vid.src=url;
-    vid.style.display='block';
-    // Also offer download
-    var a=document.createElement('a');
-    a.href=url;a.download='fruitdrama-short.webm';a.click();
-    setStatus('video-status','Video exported! Watch it above or check your downloads.','ok');
-  };
-
-  recorder.start();
-  videoPlaying=true;
-  currentSceneIdx=0;
-
-  function renderNext(){
-    if(!videoPlaying||currentSceneIdx>=videoScenes.length){
-      recorder.stop();
-      videoPlaying=false;
-      return;
-    }
-    drawScene(currentSceneIdx);
-    var scene=videoScenes[currentSceneIdx];
-    var duration=scene.type==='direction'?2500:3000;
-    currentSceneIdx++;
-    setTimeout(renderNext,duration);
-  }
-  renderNext();
-}
-
-function postVideoToYouTube(){
-  if(!ytAccessToken){
-    setStatus('video-status','Connect your YouTube account first!','err');
-    return;
-  }
-  setStatus('video-status','Export the video first, then use the Upload tab to post it.','loading');
-}
-
-function postToYouTube(){
-  if(!ytAccessToken){
-    setStatus('gen-status','Connect your YouTube account first!','err');
-    return;
-  }
-  renderVideo();
-}
-
-// ========== HISTORY ==========
-function getHistory(){try{return JSON.parse(localStorage.getItem('fd_history'))||[];}catch(e){return[];}}
-function saveToHistory(item){
-  var h=getHistory();h.unshift(item);
-  if(h.length>50)h=h.slice(0,50);
-  localStorage.setItem('fd_history',JSON.stringify(h));
-  renderHistory();
-}
-function renderHistory(){
-  var h=getHistory();
-  var list=document.getElementById('history-list');
-  var empty=document.getElementById('history-empty');
-  if(!h.length){empty.style.display='block';list.innerHTML='';return;}
-  empty.style.display='none';
-  list.innerHTML='';
-  h.forEach(function(item){
-    var emojis={'love-triangle':'💔','love-island':'🏝️','confrontation':'😤','betrayal':'🔪','upload':'📁'};
-    var div=document.createElement('div');div.className='history-item';
-    div.innerHTML='<div class="thumb">'+(emojis[item.type]||'🎬')+'</div>'+
-      '<div class="info"><h4>'+item.title+'</h4><p>'+item.date+(item.chars&&item.chars.length?' • '+item.chars.join(', '):'')+'</p></div>'+
-      '<span class="badge '+(item.status||'draft')+'">'+(item.status||'draft')+'</span>';
-    list.appendChild(div);
-  });
-}
-renderHistory();
 
 // ========== UTILS ==========
-function setStatus(id,msg,type){
-  var el=document.getElementById(id);
-  el.textContent=msg;el.className='status-bar show '+type;
-  if(type==='ok')setTimeout(function(){el.className='status-bar';},4000);
+function setPipe(name,state){
+  var icon=document.getElementById('pipe-'+name+'-icon');
+  icon.className='pipe-icon '+state;
+  if(state==='done')icon.textContent='✓';
+  else if(state==='running')icon.textContent='⟳';
+  else if(state==='err')icon.textContent='✗';
 }
+function setStatus(msg,type){
+  var el=document.getElementById('status');el.textContent=msg;el.className='status-bar show '+type;
+  if(type==='ok')setTimeout(function(){el.className='status-bar';},5000);
+}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 </script>
 </body>
 </html>
