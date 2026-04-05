@@ -370,7 +370,13 @@ async function startPipeline(){
       var scene=currentScript.scenes[i];
       document.getElementById('pipe-images-sub').textContent='Generating scene '+(i+1)+' of '+currentScript.scenes.length+'...';
 
-      var prompt='Hyper-detailed cinematic 3D render, Pixar Disney animation style. An anthropomorphic '+scene.char.toLowerCase()+' fruit character with a full human body wearing modern casual streetwear. The character has a '+scene.char.toLowerCase()+' fruit as their head with realistic human eyes, eyebrows, nose and mouth embedded naturally in the fruit surface. Subsurface scattering on fruit skin. Scene: '+scene.mood+'. Cinematic film lighting, shallow depth of field, dramatic atmosphere, vertical 9:16 composition, photorealistic 3D rendering.';
+      // Clean mood description for DALL-E content filter
+      var cleanMood=scene.mood.replace(/angry|furious|rage|revenge|threatening|shaking with anger|clenched fists|fire in eyes/gi,'determined')
+        .replace(/devastated|heartbroken|tears streaming/gi,'emotional, looking thoughtful')
+        .replace(/betrayed|terrified|panicked/gi,'surprised')
+        .replace(/dark smile|dark determination/gi,'confident expression')
+        .replace(/confrontational|accusingly/gi,'expressive gesture');
+      var prompt='Cute stylized 3D animated character design, Pixar animation style. A friendly anthropomorphic '+scene.char.toLowerCase()+' fruit character with a round body and small arms and legs, wearing a colorful hoodie. The '+scene.char.toLowerCase()+' has big expressive cartoon eyes and a small mouth showing emotion. Scene setting: '+cleanMood+'. Beautiful cinematic lighting, soft shadows, colorful atmosphere, vertical 9:16 portrait composition, high quality 3D render.';
 
       var imgUrl=await generateImage(openaiKey,prompt);
       generatedImages.push(imgUrl);
