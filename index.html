@@ -480,11 +480,17 @@ async function generateImage(apiKey,prompt){
   var resp=await fetch(apiUrl('openai','v1/images/generations'),{
     method:'POST',
     headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'},
-    body:JSON.stringify({model:'dall-e-3',prompt:prompt,n:1,size:'1024x1792',quality:'hd',style:'vivid'})
+    body:JSON.stringify({model:'dall-e-3',prompt:prompt,n:1,size:'1024x1792',quality:'hd',style:'vivid',response_format:'b64_json'})
   });
   var data=await resp.json();
   if(data.error)throw new Error(data.error.message);
-  return data.data[0].url;
+  // Convert base64 to blob URL so we can use it in canvas without CORS issues
+  var b64=data.data[0].b64_json;
+  var binary=atob(b64);
+  var bytes=new Uint8Array(binary.length);
+  for(var i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  var blob=new Blob([bytes],{type:'image/png'});
+  return URL.createObjectURL(blob);
 }
 
 function getVoiceForChar(name){
@@ -519,17 +525,18 @@ async function generateVoice(apiKey,text,voiceId){
 
 // ========== VIDEO ASSEMBLY ==========
 async function assembleVideo(){
-  var canvas=document.createElement('canvas');
+  var canvas=document.getElementById('video-canvas')||document.createElement('canvas');
   canvas.width=1080;canvas.height=1920;
   var ctx=canvas.getContext('2d');
   var stream=canvas.captureStream(30);
 
-  // Create audio context for mixing
   var audioCtx=new(window.AudioContext||window.webkitAudioContext)();
   var dest=audioCtx.createMediaStreamDestination();
   stream.addTrack(dest.stream.getAudioTracks()[0]);
 
-  var recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:5000000});
+  var mimeType='video/webm;codecs=vp9';
+  if(!MediaRecorder.isTypeSupported(mimeType))mimeType='video/webm';
+  var recorder=new MediaRecorder(stream,{mimeType:mimeType,videoBitsPerSecond:5000000});
   var chunks=[];
   recorder.ondataavailable=function(e){if(e.data.size>0)chunks.push(e.data);};
 
@@ -541,7 +548,7 @@ async function assembleVideo(){
       resolve();
     };
 
-    recorder.start();
+    recorder.start(100); // collect data every 100ms
     var sceneIdx=0;
 
     async function renderScene(){
@@ -551,80 +558,119 @@ async function assembleVideo(){
       }
 
       var scene=currentScript.scenes[sceneIdx];
-      var imgUrl=generatedImages[sceneIdx];
+      var mediaUrl=generatedImages[sceneIdx];
       var audioUrl=generatedAudio[sceneIdx];
+      var isVideo=typeof mediaUrl==='string'&&(mediaUrl.endsWith('.mp4')||mediaUrl.endsWith('.webm')||mediaUrl.includes('replicate'));
 
-      // Load image
-      var img=new Image();
-      img.crossOrigin='anonymous';
-      img.onload=async function(){
-        // Play audio
-        var audioDuration=3000;
-        if(audioUrl){
-          try{
-            var audioResp=await fetch(audioUrl);
-            var arrayBuf=await audioResp.arrayBuffer();
-            var audioBuf=await audioCtx.decodeAudioData(arrayBuf);
-            var source=audioCtx.createBufferSource();
-            source.buffer=audioBuf;
-            source.connect(dest);
-            source.start();
-            audioDuration=Math.max(audioBuf.duration*1000+500,2500);
-          }catch(e){audioDuration=3000;}
+      // Play audio
+      var audioDuration=3500;
+      if(audioUrl){
+        try{
+          var audioResp=await fetch(audioUrl);
+          var arrayBuf=await audioResp.arrayBuffer();
+          var audioBuf=await audioCtx.decodeAudioData(arrayBuf);
+          var source=audioCtx.createBufferSource();
+          source.buffer=audioBuf;
+          source.connect(dest);
+          source.start();
+          audioDuration=Math.max(audioBuf.duration*1000+500,2500);
+        }catch(e){audioDuration=3500;}
+      }
+
+      if(isVideo){
+        // Animated video clip from Replicate
+        try{
+          await renderVideoClip(ctx,mediaUrl,scene,audioDuration);
+        }catch(e){
+          // Fallback to still frame
+          await renderStillScene(ctx,mediaUrl,scene,audioDuration);
         }
+      } else {
+        // Still image with Ken Burns zoom
+        await renderStillScene(ctx,mediaUrl,scene,audioDuration);
+      }
 
-        // Animate with Ken Burns zoom over the audio duration
-        var startTime=Date.now();
-        var zoomStart=1.0;
-        var zoomEnd=1.15;
-
-        function drawFrame(){
-          var elapsed=Date.now()-startTime;
-          var progress=Math.min(elapsed/audioDuration,1);
-          var zoom=zoomStart+(zoomEnd-zoomStart)*progress;
-
-          // Clear
-          ctx.fillStyle='#000';
-          ctx.fillRect(0,0,1080,1920);
-
-          // Draw zoomed image
-          var sw=1080/zoom;
-          var sh=1920/zoom;
-          var sx=(1080-sw)/2;
-          var sy=(1920-sh)/2;
-          ctx.drawImage(img,sx,sy,sw,sh,0,0,1080,1920);
-
-          // Subtitle background
-          var subY=1920*0.78;
-          ctx.fillStyle='rgba(0,0,0,0.7)';
-          ctx.fillRect(0,subY-10,1080,200);
-
-          // Subtitle text
-          ctx.textAlign='center';
-          ctx.fillStyle='#fff';
-          ctx.font='bold 48px "Segoe UI",sans-serif';
-          wrapText(ctx,'"'+scene.line+'"',540,subY+40,980,56);
-
-          // Character name
-          ctx.fillStyle='#ffd93d';
-          ctx.font='bold 36px "Segoe UI",sans-serif';
-          ctx.fillText(scene.emoji+' '+scene.char,540,subY-20);
-
-          if(progress<1){
-            requestAnimationFrame(drawFrame);
-          } else {
-            sceneIdx++;
-            setTimeout(renderScene,300);
-          }
-        }
-        drawFrame();
-      };
-      img.onerror=function(){sceneIdx++;renderScene();};
-      img.src=imgUrl;
+      sceneIdx++;
+      setTimeout(renderScene,200);
     }
 
     renderScene();
   });
+}
+
+function renderStillScene(ctx,imgUrl,scene,duration){
+  return new Promise(function(resolve){
+    var img=new Image();
+    img.onload=function(){
+      var startTime=Date.now();
+      var zoomStart=1.0;
+      var zoomEnd=1.15;
+      function drawFrame(){
+        var elapsed=Date.now()-startTime;
+        var progress=Math.min(elapsed/duration,1);
+        var zoom=zoomStart+(zoomEnd-zoomStart)*progress;
+        ctx.fillStyle='#000';
+        ctx.fillRect(0,0,1080,1920);
+        var sw=1080/zoom;var sh=1920/zoom;
+        var sx=(1080-sw)/2;var sy=(1920-sh)/2;
+        try{ctx.drawImage(img,sx,sy,sw,sh,0,0,1080,1920);}catch(e){}
+        drawSubtitles(ctx,scene);
+        if(progress<1)requestAnimationFrame(drawFrame);
+        else resolve();
+      }
+      drawFrame();
+    };
+    img.onerror=function(){
+      // Draw black frame with text if image fails
+      ctx.fillStyle='#000';ctx.fillRect(0,0,1080,1920);
+      drawSubtitles(ctx,scene);
+      setTimeout(resolve,duration);
+    };
+    img.src=imgUrl;
+  });
+}
+
+function renderVideoClip(ctx,videoUrl,scene,duration){
+  return new Promise(function(resolve){
+    var vid=document.createElement('video');
+    vid.crossOrigin='anonymous';
+    vid.muted=true;
+    vid.playsInline=true;
+    vid.onloadeddata=function(){
+      vid.play();
+      var startTime=Date.now();
+      function drawFrame(){
+        var elapsed=Date.now()-startTime;
+        if(elapsed>=duration||vid.ended){resolve();return;}
+        ctx.fillStyle='#000';ctx.fillRect(0,0,1080,1920);
+        try{
+          var vw=vid.videoWidth,vh=vid.videoHeight;
+          var scale=Math.max(1080/vw,1920/vh);
+          var dw=vw*scale,dh=vh*scale;
+          ctx.drawImage(vid,(1080-dw)/2,(1920-dh)/2,dw,dh);
+        }catch(e){}
+        drawSubtitles(ctx,scene);
+        requestAnimationFrame(drawFrame);
+      }
+      drawFrame();
+    };
+    vid.onerror=function(){resolve();};
+    vid.src=videoUrl;
+    setTimeout(resolve,duration+1000); // safety timeout
+  });
+}
+
+function drawSubtitles(ctx,scene){
+  var subY=1920*0.78;
+  ctx.fillStyle='rgba(0,0,0,0.7)';
+  ctx.fillRect(0,subY-10,1080,200);
+  ctx.textAlign='center';
+  ctx.fillStyle='#ffd93d';
+  ctx.font='bold 36px "Segoe UI",sans-serif';
+  ctx.fillText(scene.emoji+' '+scene.char,540,subY-20);
+  ctx.fillStyle='#fff';
+  ctx.font='bold 48px "Segoe UI",sans-serif';
+  wrapText(ctx,'"'+scene.line+'"',540,subY+40,980,56);
 }
 
 function wrapText(ctx,text,x,y,maxW,lh){
