@@ -129,8 +129,7 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',system-ui,-apple-sy
 <div class="modal-bg" id="settings-modal">
   <div class="modal">
     <h2>API Keys</h2>
-    <div class="fld"><label>Kling Access Key</label><input type="password" id="key-kling-access" placeholder="AQpMp..."><div class="hint">For images + video animation — klingai.com</div></div>
-    <div class="fld"><label>Kling Secret Key</label><input type="password" id="key-kling-secret" placeholder="GQDLt..."><div class="hint">From Kling API key page</div></div>
+    <div class="fld"><label>OpenAI API Key</label><input type="password" id="key-openai" placeholder="sk-..."><div class="hint">For DALL-E 3 image generation — platform.openai.com</div></div>
     <div class="fld"><label>ElevenLabs API Key</label><input type="password" id="key-elevenlabs" placeholder="Your ElevenLabs key"><div class="hint">For pro voiceover — elevenlabs.io</div></div>
     <div class="fld"><label>YouTube OAuth Client ID</label><input type="text" id="key-youtube" placeholder="xxxxx.apps.googleusercontent.com"><div class="hint">For auto-posting — Google Cloud Console (optional)</div></div>
     <div class="modal-btns">
@@ -214,16 +213,14 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',system-ui,-apple-sy
 // ========== SETTINGS ==========
 function getKey(name){return localStorage.getItem('fd_'+name)||'';}
 function openSettings(){
-  document.getElementById('key-kling-access').value=getKey('kling_access');
-  document.getElementById('key-kling-secret').value=getKey('kling_secret');
+  document.getElementById('key-openai').value=getKey('openai');
   document.getElementById('key-elevenlabs').value=getKey('elevenlabs');
   document.getElementById('key-youtube').value=getKey('youtube');
   document.getElementById('settings-modal').classList.add('on');
 }
 function closeSettings(){document.getElementById('settings-modal').classList.remove('on');}
 function saveSettings(){
-  localStorage.setItem('fd_kling_access',document.getElementById('key-kling-access').value.trim());
-  localStorage.setItem('fd_kling_secret',document.getElementById('key-kling-secret').value.trim());
+  localStorage.setItem('fd_openai',document.getElementById('key-openai').value.trim());
   localStorage.setItem('fd_elevenlabs',document.getElementById('key-elevenlabs').value.trim());
   localStorage.setItem('fd_youtube',document.getElementById('key-youtube').value.trim());
   closeSettings();
@@ -363,23 +360,19 @@ async function startPipeline(){
   generatedImages=[];
   generatedAudio=[];
 
-  var klingAccess=getKey('kling_access');
-  var klingSecret=getKey('kling_secret');
-  if(!klingAccess||!klingSecret){setStatus('Add your Kling API keys in settings first','err');openSettings();return;}
+  var openaiKey=getKey('openai');
+  if(!openaiKey){setStatus('Add your OpenAI API key in settings first','err');openSettings();return;}
 
   try{
-    // Get Kling auth token
-    var klingToken=await getKlingToken(klingAccess,klingSecret);
-
-    // STEP 2: Generate images with Kling
+    // STEP 2: Generate images with DALL-E 3
     setPipe('images','running');
     for(var i=0;i<currentScript.scenes.length;i++){
       var scene=currentScript.scenes[i];
       document.getElementById('pipe-images-sub').textContent='Generating scene '+(i+1)+' of '+currentScript.scenes.length+'...';
 
-      var prompt='Hyper-detailed cinematic 3D render, Pixar Disney animation style. An anthropomorphic '+scene.char.toLowerCase()+' fruit character with a full human body wearing modern casual streetwear. The character has a '+scene.char.toLowerCase()+' fruit as their head with realistic human eyes, eyebrows, nose and mouth embedded naturally in the fruit surface. Subsurface scattering on fruit skin. Scene: '+scene.mood+'. Cinematic film lighting, shallow depth of field, lens flare, volumetric fog, dramatic atmosphere, 9:16 vertical composition, photorealistic 3D rendering, Unreal Engine quality.';
+      var prompt='Hyper-detailed cinematic 3D render, Pixar Disney animation style. An anthropomorphic '+scene.char.toLowerCase()+' fruit character with a full human body wearing modern casual streetwear. The character has a '+scene.char.toLowerCase()+' fruit as their head with realistic human eyes, eyebrows, nose and mouth embedded naturally in the fruit surface. Subsurface scattering on fruit skin. Scene: '+scene.mood+'. Cinematic film lighting, shallow depth of field, dramatic atmosphere, vertical 9:16 composition, photorealistic 3D rendering.';
 
-      var imgUrl=await klingGenerateImage(klingToken,prompt);
+      var imgUrl=await generateImage(openaiKey,prompt);
       generatedImages.push(imgUrl);
 
       var card=document.createElement('div');card.className='scene-card';
@@ -399,18 +392,10 @@ async function startPipeline(){
     }
     setPipe('voice','done');
 
-    // STEP 4: Animate images with Kling video
+    // STEP 4: Animation - cinematic zoom effects on stills
     setPipe('animate','running');
-    var animatedClips=[];
-    for(var k=0;k<generatedImages.length;k++){
-      document.getElementById('pipe-animate-sub').textContent='Animating scene '+(k+1)+' of '+generatedImages.length+'...';
-      try{
-        var clipUrl=await klingAnimateImage(klingToken,generatedImages[k],currentScript.scenes[k].mood);
-        animatedClips.push(clipUrl);
-      }catch(e){
-        animatedClips.push(null); // fallback to still image with zoom
-      }
-    }
+    document.getElementById('pipe-animate-sub').textContent='Applying cinematic camera movements...';
+    await sleep(500);
     setPipe('animate','done');
 
     // STEP 5: Assemble video
@@ -428,71 +413,20 @@ async function startPipeline(){
   document.getElementById('gen-video-btn').disabled=false;
 }
 
-// ========== KLING AI API ==========
-async function getKlingToken(accessKey,secretKey){
-  // Kling uses JWT auth - create token from access+secret keys
-  var header=btoa(JSON.stringify({alg:'HS256',typ:'JWT'})).replace(/=/g,'');
-  var now=Math.floor(Date.now()/1000);
-  var payload=btoa(JSON.stringify({iss:accessKey,exp:now+1800,nbf:now-5,iat:now})).replace(/=/g,'');
-  var sig=await hmacSHA256(secretKey,header+'.'+payload);
-  return header+'.'+payload+'.'+sig;
-}
-
-async function hmacSHA256(key,message){
-  var enc=new TextEncoder();
-  var cryptoKey=await crypto.subtle.importKey('raw',enc.encode(key),{name:'HMAC',hash:'SHA-256'},false,['sign']);
-  var sig=await crypto.subtle.sign('HMAC',cryptoKey,enc.encode(message));
-  return btoa(String.fromCharCode.apply(null,new Uint8Array(sig))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-}
-
-// Use local proxy to bypass CORS, fallback to direct API
+// Use local proxy to bypass CORS
 var PROXY='http://localhost:8100';
 function apiUrl(service,path){return PROXY+'/'+service+'/'+path;}
 
-async function klingGenerateImage(token,prompt){
-  var resp=await fetch(apiUrl('kling','v1/images/generations'),{
+// ========== DALL-E 3 IMAGE GENERATION ==========
+async function generateImage(apiKey,prompt){
+  var resp=await fetch(apiUrl('openai','v1/images/generations'),{
     method:'POST',
-    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({model:'kling-v1',prompt:prompt,n:1,aspect_ratio:'9:16'})
+    headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'},
+    body:JSON.stringify({model:'dall-e-3',prompt:prompt,n:1,size:'1024x1792',quality:'hd',style:'vivid'})
   });
   var data=await resp.json();
-  if(data.code!==0&&data.data&&data.data.task_id){
-    // Async task - poll for result
-    return await pollKlingTask(token,data.data.task_id,'image');
-  }
-  if(data.data&&data.data.images&&data.data.images[0])return data.data.images[0].url;
-  if(data.data&&data.data.task_id)return await pollKlingTask(token,data.data.task_id,'image');
-  throw new Error('Kling image generation failed: '+(data.message||JSON.stringify(data)));
-}
-
-async function klingAnimateImage(token,imageUrl,motion){
-  var resp=await fetch(apiUrl('kling','v1/videos/image2video'),{
-    method:'POST',
-    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({model:'kling-v1',image:imageUrl,prompt:'Subtle cinematic motion, slow dramatic camera movement, '+motion,duration:'5',mode:'std'})
-  });
-  var data=await resp.json();
-  if(data.data&&data.data.task_id)return await pollKlingTask(token,data.data.task_id,'video');
-  throw new Error('Kling animation failed: '+(data.message||JSON.stringify(data)));
-}
-
-async function pollKlingTask(token,taskId,type){
-  var endpoint=type==='image'?'images/generations':'videos/image2video';
-  for(var i=0;i<60;i++){
-    await sleep(5000);
-    var resp=await fetch(apiUrl('kling','v1/'+endpoint+'/'+taskId),{
-      headers:{'Authorization':'Bearer '+token}
-    });
-    var data=await resp.json();
-    if(data.data&&data.data.task_status==='succeed'){
-      if(type==='image'&&data.data.task_result&&data.data.task_result.images)
-        return data.data.task_result.images[0].url;
-      if(type==='video'&&data.data.task_result&&data.data.task_result.videos)
-        return data.data.task_result.videos[0].url;
-    }
-    if(data.data&&data.data.task_status==='failed')throw new Error('Kling task failed');
-  }
-  throw new Error('Kling task timed out');
+  if(data.error)throw new Error(data.error.message);
+  return data.data[0].url;
 }
 
 function getVoiceForChar(name){

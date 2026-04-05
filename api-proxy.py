@@ -41,7 +41,9 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
             # /eleven/v1/text-to-speech/xxx -> https://api.elevenlabs.io/v1/text-to-speech/xxx
             path = self.path
 
-            if path.startswith('/kling/'):
+            if path.startswith('/openai/'):
+                target = 'https://api.openai.com/' + path[8:]
+            elif path.startswith('/kling/'):
                 target = 'https://api.klingai.com/' + path[7:]
             elif path.startswith('/eleven/'):
                 target = 'https://api.elevenlabs.io/' + path[8:]
